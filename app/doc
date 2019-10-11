@@ -1,0 +1,364 @@
+Current features:
+    - Able to walk around a static dungeon.
+    - System can respond to whatever tweet messaged it.
+    - Mostly wont crash. 8/18
+    - Basic combat works 9/14
+    - Conversation system works. 9/15
+    - Conversation system contains error handling. 9/20
+
+
+Upcoming features:
+    - Add other sections.
+    - Add random encounters. *DONE*
+    - Track where user has been. *DONE*
+    - Improve database design. (more tables, the works.) *THIS WILL NEVER BE DONE*
+    - Make it not crash or at least crash properly. Not picky.
+    - Add encounters
+    - Improve combat system
+    - Proper implement conversations.
+
+Sections:
+    - Overworld:
+        > Access all other sections.
+        > Fight monsters/bandits.
+        > Discover new locations.
+        > Vendors (traveling).
+        > Interactions.
+    - Dungeon:
+        > Player moves around each room.
+        > Fight monsters/bandits.
+        > fight boss.
+        > Find treasure.
+        > Maybe interactions?
+    - City:
+        > Vendors.
+        > Interactions.
+        > No combat.
+
+States/Encounters:
+    - Talk (TLK):
+        > Speaking to people.
+        > Can be used to talk way out of combat for certain enemies.
+        > Pre-designated options per encounter (ask about/bribe/etc)
+        > Progress story.
+        > Get quests.
+        > Be given new locations.
+        > Like dungeon but one-way?
+    - Interact (ITR):
+        > Text based puzzles.
+        > Use object
+        > Can be used to avoid traps (type 'jump left' to avoid pitfall)
+    - Combat (CMB):
+        > Special class abilities.
+        > Items to add in battle? I like this idea.
+        > No HP. Minimum of one enemy can be beat in one round.
+    - Walk (WLK):
+        > Just walking around.
+        > Access to every other sections/subsection.
+        > This should probably be at the top.
+
+Database design:
+    - USER table:
+        > USERID (primary key)
+        > USERNAME
+        > DATEPOSTED
+        > TWEETI
+        > LASTMESSAGE
+    - CHARACTER:
+        > CHARID (primary key)
+        > USERID (foreign key from USER)
+        > NAME
+        > HEALTH
+        > JOB (changed from class to job to avoid confusing the compiler)
+        > STATE (combat/interaction/talking/walking)
+        > REGION
+        > REGIONTYPE
+        <Updates to character>
+        > TOUGH
+        > QUICK
+        > PRESENSE
+        > WIT
+        > ITEMS (see below)
+        > EQUIPMENT
+    - PLAYERTRACKER:
+        > POSID
+        > CHARID
+        > REGION (Specific dungeon/city)
+        > TYPE (REGIONTYPE)
+        > POS (Position, where in a section)
+        > TRACKER (Tracks specific room that player has visited)
+    - BIGSCARIES: (Monsters)
+        > BSID (primary key)
+        > Name
+        > Theme
+        > Damage
+    - GRAVEYARD:
+        > CHARID (primary key- diffs from CHARACTER)
+        > USERID (foreign key from USER)
+        > NAME
+        > JOB
+        > FELLSEC (where the hero fell)
+
+    <Build these later when the time comes.>
+    <NOTE 09/20/19: No longer needed>
+    - OVERWORLD:
+        > WORLDID (primary key)
+        > MAPID (foreign key for DUNGEON/TOWNS)
+        > NAME
+        > TYPE (will help determine which table to look)
+        > NEARBY (Which locations player can travel to next)
+    - DUNGEON: (Still not sure if want a table or tuple)
+        > DUNID (primary key)
+        > NAME
+        > THEME (foreign key from BIGSCARIES)
+        > DIFFICULTY
+    - DUNGEONMAPS: (A seperate table would be needed to keep track of squares)
+        > GRIDID (primary key)
+        > DUNID (foreign key from DUNGEON)
+        > SQUARE
+        > ADJSQUARE
+        > ENCOUNTER
+        > DESCRIPTION
+    - TOWNS:
+        > TOWNID (primary key)
+        > WORLDID (foreign key for OVERWORLD)
+        > NAME
+        > SERVICES
+        > NPCS
+    - COMBAT. <updated 9-26-19>
+        > Three main types of combat:
+            > Swarm:
+                > 1hp = 1 enemy.
+                > basic combat system.
+                > Sneaking works differently
+                > I'll flesh this all out later.
+            > Individual:
+                > Singular enemy.
+                > Three moves that you have to guess.
+                > "Enemy looks like they'll slash, lung, push"
+                > Player must choose between two options + a "safe" option
+                    > Example: Strike {right}/{left}, {Parry}/{Feight}, {Hold} Ground/{Riposte}
+                    > Safe example: {Dodge}, {Block}, {defend}
+                > Guessing wrong causes player to deal reduced/no damage and take damage less/no.
+                > Guessing right deals more damage to enemy/less to you.
+                > Playing safe on option deals min damage to you & no damage to enemy.
+                    > Used to find/memorize enemy attack pattern.
+                > Attack patterns change depending on player/random so combat doesn't become stale.
+                > Three attack phases: Start/middle/end
+                    > Start:
+                        > Surprise attack for you/enemy.
+                        > PSF: Can use items/sneak attack/free shot/hide
+                        > ESF: Enemy gets special dialogue? I dunno. Let's keep it simple for now.
+                        > One command, not three.
+                    > Mid:
+                        > Normal attack structure
+                        > As stated above.
+                        > additional special abilities to come later.
+                        > Limited number of times based on... Lets say 3 for now.
+                    > End:
+                        > One command, like Start.
+                        > After Mid, ending depends on who has taken more damage.
+                            > Player: Run away/plead/play dead/last ditch effort
+                            > Enemy:
+    - COMBAT 2.0 <updated 9-28-19>
+        > For melee combat ONLY
+            > For the moment...
+        > BF Starts with enemy using a sword move "slash, lunge, feight, thrust, beat attack"
+        > Each attack has a list of "counter" moves
+            > Players encouraged to memorize counters
+                > If player doesn't have a counter, they can also block.
+        > Play responds with ONE (not three) move.
+            > Available moves are backed on class & level.
+        > If correct counter is chosen, enemy gets damage.
+        > If incorrect counter, player gets damaged.
+        > Enemy AI choices from list of moves, selected at random.
+            > The more correct counters it has available will auto increase chance of countering player.
+        > This continues for three turns. Whoever wins at least two counters, wins.
+            > Blocking does not count towards turns.
+        > Winning allows you to spare or kill enemy.
+        > Loosing gives you option to surrender or "last ditch"
+            > Last ditch gives a percent (50% or 25% probably) to kill enemy.
+        > Surrendering gives you 1hp of damage.
+        > failing a last ditch deals double damage.
+        > Maybe lose items or gold? Dunno.
+
+
+
+Items (added 9/20/19)
+    - Items can be used in battle
+        > Items used in battle can give buff or auto-win
+        > All items are single use
+        > Using wrong items can (but not always) have penalties.
+        > Items stored in single cell delineated by comma w/ quanity shown between straight line.
+            > example: item|2,item|4,item|1
+            > When number in bracket hits zero, item removed.
+        > Items uses & description stored as tuple.
+        > Limit should be placed on both # of items & quantity, 10 for each ATM.
+            > too many items: forces user to drop one.
+                > NEVER implement auto pickup ever!!!
+            > Prevents user from going over sent quantity of an item if user tries.
+
+Equipment
+    -
+
+Encounters
+    - fifth part of a dungeon touple.
+    - Made up of a letter combo.
+        > B = bandits
+        > R = rats
+        > M = monster
+        > L = treasure (loot)
+        > T = Traps
+
+Walk State
+    - Literally just walking.
+    - Single phase.
+        > No Phase (NP)
+    <UPDATE 9/21/19>
+    - Users can find/search for items on the ground!!!
+
+Combat state
+    - Combat is currently single turn. This will not stand.
+    - New system will be made up of three phases.
+        > Start phase (SP)
+            > Determines if player or enemy spots other first.
+            > PSF = "Player spotted first". Player can go first.
+            > ESF = "Enemy spotted first".  Enemy goes first.
+            > Player going first gives special options based on class such as talking, hiding, free shot, etc.
+            > Player may also choose to return to previous square.
+            > Enemy going first auto moves to battle phase.
+            > One turn ONLY. Any action taken while in P (including look) moves to battle phase.
+            > "Use item" (All classes)
+                > Different items have different effects.
+                > Holywater hurts undead, food can be used to distract animals etc.
+        > Battle phase (BP)
+            > Player replies from list of possible actions.
+            > Example: melee, class ability, item, etc.
+            > BP repeats until one side has victory.
+            > Optimal length for BP is three turns/tweets.
+        > Alt phase:
+            > "Hide" (thief only*):
+                > Works like "wlk" state.
+                > Allows player to leave any square available (not just previous one).
+                > Reentering square starts combat phase all over.
+                > Option to sneak attack.
+            > "Talk" (Acolyte only*):
+                > Pursuade some opponents not to fight.
+                > Can also be used to bribe some enemies.
+                > Mostly only usable on intelligent enemies.
+                    > Undead, read scripture out loud maybe?
+                > Maybe sometimes get a special bonus?
+            > * = Some encounters allow other classes to access these phases.
+                > Nomads can enter "Hide" when outside and/or wild animals.
+                > Bandits can enter "Talk" with other bandits (Maybe other types?)
+        > End phase (EP)
+            > Enemy wins, player is dead or knocked out.
+                > knocked out, chance of getting knocked out when health reaches halfway. Lose some items/gold.
+                > Dead, health reaches zero. New character.
+                > Square now empty
+            > Player wins, enemy has left or been slain.
+                > Receives gold/items/exp.
+                > Square now empty.
+                > Potential after effects of items/abilities?
+            > either outcome, player can only heal half of damage taken- rounded up.
+
+Classes
+    - Skill concepts:
+        > Tough
+            > Melee abilities
+            > Strength based challenges
+        > Quick
+            > Sneaking
+            > Reflex based challenges
+        > Presence
+            > Combat avoidance
+            > Charisma based challenges
+        > Wit
+            > Spotting enemies first
+            > Finding secrets
+
+    - Currently class ideas:
+        > Bandit (Tough type)
+            > Starts with more weapons/Switch weapons while in combat.
+                > Or maybe use items while in combat?
+            > Melee focus (Bonus to Tough)
+            > Special abilities: SP
+                > Can talk down other bandits.
+                > "Free shot" (Bandit only*):
+                    > Extra damage.
+                    > Bandits can switch weapons freely but other classes take a small penalty to "put weapon away" on
+                      their next turn.
+            > Special abilities: BP
+                > "use item" Can use item at any point in battle.
+            > Special abilities: EP
+                > None?
+
+        > Thief (Quick type)
+            > Special abilities: SP
+                > Can enter "Hide" alt phase.
+                    > Back stab (bonus damage based on quick)
+                    > Every turn in "hide" increased chance of entering battle phase.
+                    > Sneak past encounters
+            > Special abilities: BP
+                    > Dodge: Less damage taken but chance to do no damage.
+            > Special abilities: EP
+                    > None?
+
+        > Acolyte (Presence type)
+            > Special abilities: SP
+                > Can enter "talk alt phase".
+                > Ready holy book.
+            > Special abilities: BP
+                > "read scripture" Damages undead.
+                > Maybe type exact scripture verse number?
+                > Higher chance of human enemies
+            > Special abilities: EP
+                > Higher chance of getting Knocked Out over killed?
+
+        > Nomad (Wit type)
+            > Special abilities: SP
+                > "Ingest Herb":
+                    > Take special herbs to give bonuses based on enemy fighting.
+                    > No hint will be given to the player on what herb does what.
+                    > MUST have herb in items.
+                    > Herbs are found in overworld, dungeons or purchased.
+                    > Some herbs have negative after effects.
+            > Special abilities: BP
+                > Based on herb taken:
+                    > More damage given but more damage taken.
+                    > Bonus to certain enemy type (or penalty if taken wrong herb).
+                    > Temp HP loss after battle.
+                    > Chance to get auto-knocked out during battle.
+                    > Temp HP bonus
+                    > Removes ability to get knocked out (double edged sword)
+                    > Blacked out, battle auto ends.
+            > Special abilities: EP
+                > Chance of killing all enemies if Knocked Out b/c they ingested your herbs?
+
+Tracker design
+    - Current tracker:
+        > Full string: 1^1,2^1B0,2^2M0,3^2T0,4^2T0,4^3L0
+        > Singular cell: (position)(type of encounter)(number of things in encounter)
+        > Example: 2^1R2 (two rats on cell 2^1)
+    - New design concept:
+        > cell: (position)+"|"+(type of encounter)+"|"+(phase of encounter()+"|"+(number)
+        > example: 2^1|Rat|PSF|2 (two rats on cell 2^1. Player goes first.)
+    - Encounter needs to function differently for each state but LOOK the same.
+    - Combat: (see combat section)
+        >
+Interact (9/21/19)
+    - Three kinds of interactions:
+        > Trap (to avoid)
+        > Puzzle (to solve)
+        > Items (to pickup/find)
+    - Traps
+        > Find traps automatically.
+        > Thieves/quick classes get bonuses to avoid them and/or avoid and/or spot certain types.
+        > Single turn encounters.
+            > given actions like "jump right/left" but randomized.
+            > Small hints in wording/grammar used for perceptive players.
+    - Puzzles
+        > Look up zork?
+        > I'll figure it out later.
+    - Items
+        > Items are found while in wlk.
