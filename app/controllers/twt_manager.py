@@ -10,7 +10,7 @@ from datetime import datetime
 from app.controllers.db_mgmt import DatabaseManager
 from app.controllers.g_manager import Main
 
-
+################################
 ckey= '*****'
 csecret= '*****'
 atoken= '*****'
