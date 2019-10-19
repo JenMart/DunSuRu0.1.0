@@ -16,6 +16,7 @@ Upcoming features:
     - Add encounters
     - Improve combat system
     - Proper implement conversations.
+    - Add in Interprocess Communication (IPC) for database.
 
 Sections:
     - Overworld:
@@ -87,11 +88,6 @@ Database design:
         > TYPE (REGIONTYPE)
         > POS (Position, where in a section)
         > TRACKER (Tracks specific room that player has visited)
-    - BIGSCARIES: (Monsters)
-        > BSID (primary key)
-        > Name
-        > Theme
-        > Damage
     - GRAVEYARD:
         > CHARID (primary key- diffs from CHARACTER)
         > USERID (foreign key from USER)
