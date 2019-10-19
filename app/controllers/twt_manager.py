@@ -100,6 +100,4 @@ if __name__ == '__main__':
     except Exception as e:
         print(str(e))
         print("process failed at: " + time.ctime())
-        # time.sleep(5)
-        th = threading.Thread(stream.filter(track=['things']))
-        th.start()
+
