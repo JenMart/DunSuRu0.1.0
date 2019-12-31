@@ -1,11 +1,8 @@
-
 import sqlite3
 import os
-from app.models.charDAO import CharDAO
+
 
 class DatabaseManager:
-    #
-    #   Init
     #
     #   Should call self.setup() if the DB isn't found in the same folder as g_manager.py.
     #   To rebuild the DB, delete the file and run g_manager.py again.
@@ -37,7 +34,6 @@ class DatabaseManager:
                 DATESTAMP VARCHAR(255) NOT NULL,
                 LASTMESSAGE VARCHAR(255) NOT NULL
                 )"""
-
         characters = """ CREATE TABLE CHARACTERS (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
                     USER INTEGER NOT NULL,
@@ -51,7 +47,6 @@ class DatabaseManager:
                     REGIONTYPE VARCHAR(255) NOT NULL,
                     FOREIGN KEY(USER) REFERENCES USERS(ID)
                     ) """
-
         playerTracker = """CREATE TABLE PLAYERTRACKER (
                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
                         CHAR INTEGER NOT NULL,
@@ -61,7 +56,6 @@ class DatabaseManager:
                         TRACKER VARCHAR(255) NOT NULL,
                         FOREIGN KEY(CHAR) REFERENCES USERS(ID)
                     )"""
-
         graveyard = """CREATE TABLE GRAVEYARD (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
                     USER INTEGER NOT NULL,
@@ -114,24 +108,10 @@ class DatabaseManager:
         c = cursor.cursor()
         u = cursor.cursor()
         p = cursor.cursor()
-        # x = cursor.cursor()
-        # x.execute("""SELECT TRACKER FROM CHARACTERS WHERE NAME = ?""", ("user",))
-        #
-        # # print(enc)
-        # # ex = x.fetchall()
-        # # ez = ""
-        # # track = curPos
-        # # for e in ex:
-        # #     ez = e[0]
-        # # print(ez)
-        # # if curPos in ez:
-        # #     track = ez
-        # # else:
-        # #     track = track + "," + ez + enc
-        # print(enc)
+        print(char.tracker)
         c.execute("""UPDATE USERS SET TWEETID = ?, DATESTAMP = ?, LASTMESSAGE = ? WHERE USERNAME = ?""", (tweetID, str(date), "null", name))
         u.execute("""UPDATE CHARACTERS SET STATE = ?, ITEMS = ? WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = ?)""",(char.state, char.items, name))
-        p.execute("""UPDATE PLAYERTRACKER SET POS = ?, TRACKER = ? WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME =?)""", (char.POS, char.tracker, "user"))
+        p.execute("""UPDATE PLAYERTRACKER SET POS = ?, TRACKER = ? WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME =?)""", (char.POS, char.tracker, name))
         cursor.commit()
         cursor.close()
         return
@@ -176,6 +156,9 @@ class DatabaseManager:
         return outTweet
 
     def pullCharacter(self, name):
+        #
+        # NOTE: Anything other than basic joins are not supported with SQLite.
+        #
         cursor = sqlite3.connect('SkyTweetRun.sqlite')
         c = cursor.cursor()
         c.execute("""SELECT CHARACTERS.NAME, CHARACTERS.JOB, CHARACTERS.HEALTH, CHARACTERS.GOLD, CHARACTERS.ITEMS,
@@ -183,10 +166,8 @@ class DatabaseManager:
                      FROM CHARACTERS JOIN PLAYERTRACKER ON
                     CHARACTERS.ID = PLAYERTRACKER.CHAR WHERE USER =
                     (SELECT ID FROM USERS WHERE USERNAME = ?)""",(name,))
-        # c.execute("""SELECT * FROM CHARACTERS WHERE USER = (SELECT USERID FROM USERS WHERE USERNAME = ?)""", (name,))
         getChar = c.fetchall()
         cursor.commit()
         cursor.close()
         charTuple = getChar[0]
-
         return charTuple
