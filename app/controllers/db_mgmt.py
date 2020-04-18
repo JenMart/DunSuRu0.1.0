@@ -1,11 +1,9 @@
-
 import sqlite3
 import os
-from app.models.charDAO import CharDAO
+from sqlite3worker import Sqlite3Worker
+
 
 class DatabaseManager:
-    #
-    #   Init
     #
     #   Should call self.setup() if the DB isn't found in the same folder as g_manager.py.
     #   To rebuild the DB, delete the file and run g_manager.py again.
@@ -23,12 +21,16 @@ class DatabaseManager:
            os.remove('SkyTweetRun.sqlite')
 
     def setup(self):
-        cur = sqlite3.connect('SkyTweetRun.sqlite')
-        u = cur.cursor()
-        c = cur.cursor()
-        m = cur.cursor()
-        g = cur.cursor()
-        p = cur.cursor()
+        # cur = sqlite3.connect('SkyTweetRun.sqlite')
+        #
+        # u = cur.cursor()
+        # c = cur.cursor()
+        # m = cur.cursor()
+        # g = cur.cursor()
+        # p = cur.cursor()
+
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+
         print("Creating database")
         users = """ CREATE TABLE USERS (
                 ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +39,6 @@ class DatabaseManager:
                 DATESTAMP VARCHAR(255) NOT NULL,
                 LASTMESSAGE VARCHAR(255) NOT NULL
                 )"""
-
         characters = """ CREATE TABLE CHARACTERS (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
                     USER INTEGER NOT NULL,
@@ -49,9 +50,9 @@ class DatabaseManager:
                     STATE VARCHAR(4) NOT NULL,                  
                     REGION VARCHAR(255) NOT NULL,
                     REGIONTYPE VARCHAR(255) NOT NULL,
+                    WINCON = VARCHAR(5) NOT NULL,
                     FOREIGN KEY(USER) REFERENCES USERS(ID)
                     ) """
-
         playerTracker = """CREATE TABLE PLAYERTRACKER (
                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
                         CHAR INTEGER NOT NULL,
@@ -61,7 +62,6 @@ class DatabaseManager:
                         TRACKER VARCHAR(255) NOT NULL,
                         FOREIGN KEY(CHAR) REFERENCES USERS(ID)
                     )"""
-
         graveyard = """CREATE TABLE GRAVEYARD (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
                     USER INTEGER NOT NULL,
@@ -71,71 +71,123 @@ class DatabaseManager:
                     FOREIGN KEY(USER) REFERENCES USERS(ID)
                     )
                     """
-        u.execute(users)
-        c.execute(characters)
-        g.execute(graveyard)
-        p.execute(playerTracker)
+        sql_worker.execute(users)
+        sql_worker.execute(characters)
+        sql_worker.execute(graveyard)
+        sql_worker.execute(playerTracker)
+        sql_worker.close()
 
-        cur.commit()
-        cur.close()
+        # u.execute(users)
+        # c.execute(characters)
+        # g.execute(graveyard)
+        # p.execute(playerTracker)
+        #
+        # cur.commit()
+        # cur.close()
 
     def addUser(self, name, date, tweetID):
-        cursor = sqlite3.connect('SkyTweetRun.sqlite')
-        c = cursor.cursor()
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute("INSERT INTO USERS(USERNAME, TWEETID, DATESTAMP, LASTMESSAGE) VALUES (?, ?, ?, ?)", (name, tweetID, str(date), "null"))
+        sql_worker.close()
         print("""Adding user data to Database""")
-        c.execute("INSERT INTO USERS(USERNAME, TWEETID, DATESTAMP, LASTMESSAGE) VALUES (?, ?, ?, ?)", (name, tweetID, str(date), "null"))
-        cursor.commit()
-        cursor.close()
+        # cursor = sqlite3.connect('SkyTweetRun.sqlite')
+        # c = cursor.cursor()
+        # c.execute("INSERT INTO USERS(USERNAME, TWEETID, DATESTAMP, LASTMESSAGE) VALUES (?, ?, ?, ?)", (name, tweetID, str(date), "null"))
+        # cursor.commit()
+        # cursor.close()
         return
 
     def addChar(self, userName, charName):
-        cur = sqlite3.connect('SkyTweetRun.sqlite')
-        c = cur.cursor()
-        p = cur.cursor()
         charJob = "bandit"
-        health = 1
-        gold = 1
+        health = "10"
+        gold = "1"
         curSec = "dun"
         region = "tester"
         state = "wlk"
         pos = "1^1"
         tracker = "1^1|E|NP|0"
-        items = "Holy Water|1,Alch Fire|3,Egg|5"
-        c.execute("""INSERT INTO CHARACTERS(USER, NAME, JOB, HEALTH, GOLD, ITEMS, STATE, REGIONTYPE, REGION) VALUES((SELECT ID FROM USERS WHERE USERNAME = ?),
-         ?, ?, ?, ?, ?, ?, ?, ?)""", (userName, charName, charJob, health, gold, items, state, curSec, region))
-        p.execute("""INSERT INTO PLAYERTRACKER(CHAR, REGION, TYPE, POS, TRACKER) VALUES((SELECT ID FROM CHARACTERS WHERE NAME =?), ?, ?, ?, ?)""",
-                  (charName, region, curSec, pos, tracker))
-        cur.commit()
-        cur.close()
+        items = "Holy Water|1,Alch Fire|3,Egg|5,lit candle|1"
+        wincon = "false"
+        CHARACTER = (
+            """INSERT INTO CHARACTERS(USER, NAME, JOB, HEALTH, GOLD, ITEMS, STATE, REGIONTYPE, REGION, WINCON) VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')""".format(
+                userName, charName, charJob, health, gold, items, state, curSec, region, wincon))
+        PLAYERTRACKER = (
+            """INSERT INTO PLAYERTRACKER(CHAR, REGION, TYPE, POS, TRACKER) VALUES((SELECT ID FROM CHARACTERS WHERE NAME ='{}'), '{}', '{}', '{}', '{}')""".format(
+                charName, region, curSec, pos, tracker))
+
+        # cur = sqlite3.connect('SkyTweetRun.sqlite')
+        # c = cur.cursor()
+        # p = cur.cursor()
+        # c.execute(CHARACTER)
+        # p.execute(PLAYERTRACKER)
+        # cur.commit()
+        # cur.close()
+
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute(CHARACTER)
+        sql_worker.execute(PLAYERTRACKER)
+        sql_worker.close()
+
         return
+
+    def character_death(self, username, char):
+        CHARACTER = ("""DELETE FROM CHARACTERS WHERE VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(username))
+        PLAYERTRACKER = (
+            """DELETE FROM PLAYERTRACKER WHERE VALUES(SELECT ID FROM CHARACTERS WHERE NAME ='{}'""".format(char.name))
+        the_longship = ("""INSERT INTO GRAVEYARD() VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}'))""".format(username, char.name, char.job, char.gold))
+
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute(CHARACTER)
+        sql_worker.execute(PLAYERTRACKER)
+        sql_worker.execute(the_longship)
+        sql_worker.close()
+
+        return
+
+    graveyard = """CREATE TABLE GRAVEYARD (
+
+
+
+                JOB VARCHAR(255) NOT NULL,
+                GOLD INT NOT NULL,
+                FOREIGN KEY(USER) REFERENCES USERS(ID)
+                )
+                """
+
+
 
     def updateUser(self, name, tweetID, date, char):
-        cursor = sqlite3.connect('SkyTweetRun.sqlite')
-        c = cursor.cursor()
-        u = cursor.cursor()
-        p = cursor.cursor()
-        # x = cursor.cursor()
-        # x.execute("""SELECT TRACKER FROM CHARACTERS WHERE NAME = ?""", ("user",))
-        #
-        # # print(enc)
-        # # ex = x.fetchall()
-        # # ez = ""
-        # # track = curPos
-        # # for e in ex:
-        # #     ez = e[0]
-        # # print(ez)
-        # # if curPos in ez:
-        # #     track = ez
-        # # else:
-        # #     track = track + "," + ez + enc
-        # print(enc)
-        c.execute("""UPDATE USERS SET TWEETID = ?, DATESTAMP = ?, LASTMESSAGE = ? WHERE USERNAME = ?""", (tweetID, str(date), "null", name))
-        u.execute("""UPDATE CHARACTERS SET STATE = ?, ITEMS = ? WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = ?)""",(char.state, char.items, name))
-        p.execute("""UPDATE PLAYERTRACKER SET POS = ?, TRACKER = ? WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME =?)""", (char.POS, char.tracker, "user"))
-        cursor.commit()
-        cursor.close()
+        CHARACT = ("""UPDATE CHARACTERS SET STATE = '{}', ITEMS = '{}' WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(char.state, char.items, name))
+        USER = ("""UPDATE USERS SET TWEETID = '{}', DATESTAMP = '{}', LASTMESSAGE = '{}' WHERE USERNAME = '{}'""".format(tweetID, str(date), "null", name))
+        PLAYERTRACKER = ("""UPDATE PLAYERTRACKER SET POS = '{}', TRACKER = '{}' WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME ='{}')""".format(char.POS, char.tracker, name))
+
+        # cursor = sqlite3.connect('SkyTweetRun.sqlite')
+        # c = cursor.cursor()
+        # u = cursor.cursor()
+        # p = cursor.cursor()
+        # print(char.tracker)
+        # c.execute("""UPDATE USERS SET TWEETID = ?, DATESTAMP = ?, LASTMESSAGE = ? WHERE USERNAME = ?""", (tweetID, str(date), "null", name))
+        # u.execute("""UPDATE CHARACTERS SET STATE = ?, ITEMS = ? WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = ?)""",(char.state, char.items, name))
+        # p.execute("""UPDATE PLAYERTRACKER SET POS = ?, TRACKER = ? WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME =?)""", (char.POS, char.tracker, name))
+        # cursor.commit()
+        # cursor.close()
+
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute(CHARACT)
+        sql_worker.execute(PLAYERTRACKER)
+        sql_worker.execute(USER)
+        sql_worker.close()
         return
 
+    def for_this_moment_all_is_well(self, the_honored):
+
+        yes_please = "true"
+        CHARACT = ("""UPDATE CHARACTERS SET WINCON = {} WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(yes_please, the_honored))
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute(CHARACT)
+        sql_worker.close()
+
+        return
 
     def checkUser(self, name):
         cursor = sqlite3.connect('SkyTweetRun.sqlite')
@@ -176,6 +228,9 @@ class DatabaseManager:
         return outTweet
 
     def pullCharacter(self, name):
+        #
+        # NOTE: Anything other than basic joins are not supported with SQLite.
+        #
         cursor = sqlite3.connect('SkyTweetRun.sqlite')
         c = cursor.cursor()
         c.execute("""SELECT CHARACTERS.NAME, CHARACTERS.JOB, CHARACTERS.HEALTH, CHARACTERS.GOLD, CHARACTERS.ITEMS,
@@ -183,10 +238,9 @@ class DatabaseManager:
                      FROM CHARACTERS JOIN PLAYERTRACKER ON
                     CHARACTERS.ID = PLAYERTRACKER.CHAR WHERE USER =
                     (SELECT ID FROM USERS WHERE USERNAME = ?)""",(name,))
-        # c.execute("""SELECT * FROM CHARACTERS WHERE USER = (SELECT USERID FROM USERS WHERE USERNAME = ?)""", (name,))
         getChar = c.fetchall()
         cursor.commit()
         cursor.close()
         charTuple = getChar[0]
-
         return charTuple
+

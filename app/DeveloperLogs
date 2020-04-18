@@ -8,13 +8,14 @@ Current features:
 
 
 Upcoming features:
+    - Adding puzzle system [added 11-3"-19]
     - Add other sections.
     - Add random encounters. *DONE*
     - Track where user has been. *DONE*
     - Improve database design. (more tables, the works.) *THIS WILL NEVER BE DONE*
     - Make it not crash or at least crash properly. Not picky.
     - Add encounters
-    - Improve combat system
+    - Improve combat system *DONE-SH*
     - Proper implement conversations.
     - Add in Interprocess Communication (IPC) for database.
 
@@ -339,6 +340,8 @@ Tracker design
     - New design concept:
         > cell: (position)+"|"+(type of encounter)+"|"+(phase of encounter()+"|"+(number)
         > example: 2^1|Rat|PSF|2 (two rats on cell 2^1. Player goes first.)
+    - SECOND new design concept.
+        > Example" 2^1|T|xx|5|5|
     - Encounter needs to function differently for each state but LOOK the same.
     - Combat: (see combat section)
         >

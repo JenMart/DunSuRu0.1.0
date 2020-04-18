@@ -1,14 +1,13 @@
 import threading
 import time
-import random
 import tweepy
 from tweepy.streaming import StreamListener, json
 from tweepy import OAuthHandler
 from tweepy import Stream
 from datetime import datetime
-# from app.models.userDAO import UserDAO
 from app.controllers.db_mgmt import DatabaseManager
 from app.controllers.g_manager import Main
+from  app.models.userData import userData
 
 ################################
 ckey= '*****'
@@ -27,14 +26,16 @@ class twtrManager(StreamListener):
         super().__init__(api=None)
         self.db_mgmt = DatabaseManager()
         self.g_manager = Main()
+        self.userData = userData
 
 
     def on_status(self, status):
         #
         # Status object holds all twitter user info objects
+        # Here we parse down data
         #
         screenName = status.author.screen_name
-        createDate = str(status.created_at)
+        date = str(status.created_at)
         statID = status.id
         txt = status.text
         txt = txt.replace("@DunSuRu","")
@@ -44,12 +45,8 @@ class twtrManager(StreamListener):
         print("Time Stamp: "+DT)
         ##########################################
         try:
-            #
-            #Originally started a new thread. Removed because pointless.
-            #
-            ex = self.g_manager.handleChoice(txt, screenName, createDate, statID)
+            ex = self.g_manager.handleChoice(txt, screenName, date, statID)
             self.printTweet(screenName, ex, statID)
-
         except Exception as e:
             print("Error")
             print(e)
@@ -97,6 +94,7 @@ if __name__ == '__main__':
     try:
         th = threading.Thread(stream.filter(track=['@DunSuRu']))
         th.start()
+        print("ddddd")
     except Exception as e:
         print(str(e))
         print("process failed at: " + time.ctime())
