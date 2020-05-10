@@ -10,10 +10,11 @@ from app.controllers.g_manager import Main
 from  app.models.userData import userData
 
 ################################
-ckey= '*****'
-csecret= '*****'
-atoken= '*****'
-asecret= '*****'
+ckey= 'jmPAnJTFJzL9xg2M6LxwAXHTO'
+csecret= 'wQ4EcSOGyqHcFKwZvGVa5eIjtZ3G5CJKJlMfeldQSzFZa7hoQe'
+atoken= '2836017980-WsUL4uUBLVKGD2VCrkyhijZs6g8pq8CwztiELJ9'
+asecret= 'wi5wNXdpPOje76oB0EqpZGOVzq78Pb3ml44wYRl2AiI2o'
+
 
 class twtrManager(StreamListener):
 
