@@ -13,7 +13,7 @@ class itemManager:
         self.textDAO = textDAO
 
     def useItem(self, input, char):
-        itemsCut = self.char.items.lower().split(",")
+        itemsCut = char.items.lower().split(",")
         output = ""
         if "show" in input:
             output = "You hold in your possession: "
@@ -24,8 +24,10 @@ class itemManager:
             for i in itemsCut:
                 i = i.split("|")[0]
                 print(i)
-                if i in output:
-                    if i == "lit candle":   # Secrets.
+                if input == "use item egg":
+                    print("pip[ppp")
+                if i in input:
+                    if "candle" in input:   # Secrets.
                         if char.POS == "8^4":
                             char.state = "itr"
                             char.track.replace("8^4|e|xx|5|5|5","8^4|0|start|5|5|5")

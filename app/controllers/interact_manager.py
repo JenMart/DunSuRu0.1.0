@@ -21,6 +21,7 @@ class interactManager:
         #
         x = char.tracker.split(",")
         text = textDAO("76hj34fejlk")
+        parse = parsers()
         for i in x:
             if char.POS in i:
                 counter = i
@@ -30,7 +31,7 @@ class interactManager:
         num = counter.split("|")[3]
         forth = counter.split("|")[4]
         fifth = counter.split("|")[5]
-        parse = parsers()
+
 
 
         if enc == "T": # Traps

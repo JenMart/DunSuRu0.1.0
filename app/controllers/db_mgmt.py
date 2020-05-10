@@ -1,6 +1,8 @@
 import sqlite3
 import os
+
 from sqlite3worker import Sqlite3Worker
+
 
 
 class DatabaseManager:
@@ -50,7 +52,7 @@ class DatabaseManager:
                     STATE VARCHAR(4) NOT NULL,                  
                     REGION VARCHAR(255) NOT NULL,
                     REGIONTYPE VARCHAR(255) NOT NULL,
-                    WINCON = VARCHAR(5) NOT NULL,
+                    WINCON VARCHAR(5) NOT NULL,
                     FOREIGN KEY(USER) REFERENCES USERS(ID)
                     ) """
         playerTracker = """CREATE TABLE PLAYERTRACKER (
@@ -60,7 +62,7 @@ class DatabaseManager:
                         TYPE VARCHAR(255) NOT NULL,
                         POS VARCHAR(255) NOT NULL,
                         TRACKER VARCHAR(255) NOT NULL,
-                        FOREIGN KEY(CHAR) REFERENCES USERS(ID)
+                        FOREIGN KEY(CHAR) REFERENCES CHARACTERS(ID)
                     )"""
         graveyard = """CREATE TABLE GRAVEYARD (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -109,8 +111,8 @@ class DatabaseManager:
         items = "Holy Water|1,Alch Fire|3,Egg|5,lit candle|1"
         wincon = "false"
         CHARACTER = (
-            """INSERT INTO CHARACTERS(USER, NAME, JOB, HEALTH, GOLD, ITEMS, STATE, REGIONTYPE, REGION, WINCON) VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')""".format(
-                userName, charName, charJob, health, gold, items, state, curSec, region, wincon))
+            """INSERT INTO CHARACTERS(USER, NAME, JOB, HEALTH, GOLD, ITEMS, STATE, REGIONTYPE, REGION, WINCON) VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')"""
+                .format(userName, charName, charJob, health, gold, items, state, curSec, region, wincon))
         PLAYERTRACKER = (
             """INSERT INTO PLAYERTRACKER(CHAR, REGION, TYPE, POS, TRACKER) VALUES((SELECT ID FROM CHARACTERS WHERE NAME ='{}'), '{}', '{}', '{}', '{}')""".format(
                 charName, region, curSec, pos, tracker))
@@ -128,6 +130,22 @@ class DatabaseManager:
         sql_worker.execute(PLAYERTRACKER)
         sql_worker.close()
 
+        return
+
+    def delete_character(self, userName, charName):
+        PLAYERTRACKER = (
+            """DELETE FROM PLAYERTRACKER WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME ='{}')""".format(charName))
+
+        CHARACTER = (
+            """DELETE FROM CHARACTERS WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(userName))
+        USER = ("""DELETE FROM USERS WHERE USERNAME = '{}'""".format(userName))
+
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute(PLAYERTRACKER)
+        sql_worker.execute(CHARACTER)
+        sql_worker.execute(USER)
+        sql_worker.close()
+        print("character successfully deleted")
         return
 
     def character_death(self, username, char):
@@ -157,6 +175,7 @@ class DatabaseManager:
 
 
     def updateUser(self, name, tweetID, date, char):
+
         CHARACT = ("""UPDATE CHARACTERS SET STATE = '{}', ITEMS = '{}' WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(char.state, char.items, name))
         USER = ("""UPDATE USERS SET TWEETID = '{}', DATESTAMP = '{}', LASTMESSAGE = '{}' WHERE USERNAME = '{}'""".format(tweetID, str(date), "null", name))
         PLAYERTRACKER = ("""UPDATE PLAYERTRACKER SET POS = '{}', TRACKER = '{}' WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME ='{}')""".format(char.POS, char.tracker, name))
@@ -177,6 +196,7 @@ class DatabaseManager:
         sql_worker.execute(PLAYERTRACKER)
         sql_worker.execute(USER)
         sql_worker.close()
+
         return
 
     def for_this_moment_all_is_well(self, the_honored):
@@ -243,4 +263,5 @@ class DatabaseManager:
         cursor.close()
         charTuple = getChar[0]
         return charTuple
+
 

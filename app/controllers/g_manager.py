@@ -2,6 +2,7 @@ from app.controllers.db_mgmt import DatabaseManager
 from app.controllers.twt_print import printTwt
 from app.models.charDAO import CharDAO
 from app.models.textGetter import textDAO
+from app.models.userData import userData
 from app.controllers.combat_manager import combatManager
 from app.controllers.new_character import newCharacter
 from app.controllers.interact_manager import interactManager
@@ -22,6 +23,7 @@ class Main:
         self.twt_print = printTwt()
         self.CharDAO = CharDAO
         self.textDAO = textDAO
+        self.userData = userData
         self.combatManager = combatManager
         self.newCharacter = newCharacter
         self.interact = interactManager
@@ -36,6 +38,7 @@ class Main:
         #
         # checks to see if user info already exists. If it does not, adds to DB.
         #
+        self.user = userData(userName, createDate, input, tweetID)
         checkUser = self.db_mgmt.checkUser(userName)
         if (checkUser):  # If not, add to DB
             self.db_mgmt.addUser(userName, createDate, tweetID)
@@ -46,12 +49,13 @@ class Main:
         checkChar = self.db_mgmt.checkCharacter(userName)
         if (checkChar):
             if "new" in input or "start" in input:
+                new_char = newCharacter()
                 self.db_mgmt.addChar(userName, userName)
                 charTuple = self.db_mgmt.pullCharacter(userName)
                 self.char = CharDAO(charTuple[0], charTuple[1], int(charTuple[2]), charTuple[3], charTuple[4], charTuple[5],
                                     charTuple[6],
                                     charTuple[7], charTuple[8], charTuple[9])
-                output = newCharacter.newCharacter("this shouldn't be here", userName)
+                output = new_char.newCharacter(userName)
                 output += self.lookAround()
             else:
                 output = "You do not possess a character. Type {Start} or {New} to begin playing."
@@ -63,21 +67,25 @@ class Main:
                                 charTuple[7], charTuple[8], charTuple[9])
 
             if "items" in input or "item" in input:
-                output = itemManager.useItem("this shouldn't be here", input, self.char)
+                item_manager = itemManager()
+                output = item_manager.useItem(input, self.char)
             elif "look" in input:
                 output = self.lookAround()
             elif "summon the basilisk of carrows way." in input:
-                output = self.converse(input)
+                converse = talkManager()
+                output = converse.converse(input)
             elif self.char.state == "wlk":
                 output = self.moveto(input)
                 output += self.lookAround()
-                output += self.encounter()
+                output += self.encounter(userName)
             elif self.char.state == "cmb":
-                output = combatManager.groupCombat("this shouldn't be here", input, self.char)
+                combat_manager = combatManager()
+                output = combat_manager.groupCombat(input, self.char)
                 # output += self.lookAround()
                 # output += self.encounter()
             elif self.char.state == "mel": #Two sep combat types. May combine later.
-                output = combatManager.meleeCombat("this shouldn't be here", input, self.char)
+                combat_manager = combatManager()
+                output = combat_manager.meleeCombat(input, self.char)
                 # output += self.lookAround()
                 # output += self.encounter()
             elif self.char.state == "itr":
@@ -86,7 +94,8 @@ class Main:
                 # output += self.lookAround()
                 # output += self.encounter()
             elif self.char.state == "tlk":
-                output = talkManager.converse("this shouldn't be here", input)
+                talk_manager = talkManager()
+                output = talk_manager.converse(input)
             elif self.char.state == "PZL":
                 puz = puzzleManager()
                 output = puz.puzzles(input, self.char)
@@ -169,7 +178,7 @@ class Main:
         output = output[:-1] + "."
         return output
 
-    def encounter(self):
+    def encounter(self, user):
         phs = "xx"
         enc = ""
         num = 4
@@ -185,6 +194,8 @@ class Main:
         #########################################################
         # If encounter exists.
         #########################################################
+        print("Position is...")
+        print(self.char.POS)
         if self.char.POS in self.char.tracker: #If encounter exists in this square
             x = self.char.tracker.split(",")
             for i in x: # Looks for space
@@ -219,6 +230,11 @@ class Main:
             enc = encSquare[randy]
             if enc in "LZ" or "|L|" in self.char.tracker or "|Z|" in self.char.tracker: # Added so the loot and the Basilisk are non-repeatable.
                 enc = "E"
+
+            if self.user.username == "fakeWalker" and self.user.statusID == "000000000000":
+                enc = "E"
+            elif self.user.username == "fakeCombatWin" and self.user.statusID == "000000000000":
+                enc = "B"
             output = text.get_encounters(enc, num).split("|")  # All encounters set to max
             self.char.state = output[1]
             output = output[0]

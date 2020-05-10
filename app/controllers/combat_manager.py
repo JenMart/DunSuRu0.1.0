@@ -44,7 +44,7 @@ class combatManager:
                     enemyHealth = 0
                     break
                 elif "slay" in input:
-                    output = "You have slain the enemy"
+                    output = "You have slain the enemy."
                     enemyHealth = 0
                     break
                 else:

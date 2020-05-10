@@ -136,6 +136,8 @@ class textDAO:
         # T
         # P = puzzle, PZL
         #
+        # BEREMELETE
+        #
         dunDict = { # Direction discription order: North, South, East, West
             "1^1": "p,2^1,x,x,BEREMELETE,You stand in a dusty chamber. The sun kissed entrance is to the {north}. To the {south} is carved stone passage."
             , "2^1": "1^1,x,2^2,x,BEREMELETE,You stand in dimly lit corridor. The passage {south} winds to the east. You feel the touches of light from the {north}."
@@ -148,13 +150,13 @@ class textDAO:
             , "6^3": "5^3,x,6^4,6^2,BEREMELETE,You stand at a crossroad. The way [north] leads to the entrance. The way {east] the carved corridor continues. The way {west} is an ancient cave." # The split happens here.
             , "6^4": "x,7^4,x,6^3,BEREMELETE,Somewhere you hear ragged breathing but you can't place where."
             , "7^2": "6^2,8^2,x,x,BEREMELETE,You see scratches in the walls and floor of the cave that look almost like brick. " # cave
-            , "7^4": "6^4,8^4,x,x,BEREMELETE,Yoru footsteps echo down the long."
+            , "7^4": "6^4,8^4,x,x,BEREMELETE,Your footsteps echo down the long."
             , "8^2": "7^2,x,8^3,x,BEREMELETE,The smell of mildew and refuse is everywhere." # cave, next to path.
             , "8^3": "x,x,8^4,8^2,BEREMELETE,Along the path, you see scrap marks along the walls"
             , "8^4": "7^4,9^4,8^5,8^3,EEEEEBEEEE,You stand in a circular room. In the center stands a pile of stones.  " # The spot.
             , "8^5": "x,x,x,8^4,BEREMELETE,A cave in blocks your path. "
             , "9^4": "8^4,x,x,x,BEREMELETE,The hall ends suddenly."
-        } # 6^2, 7^2, 8^2
+        } # 16+1 squares
         try:
             return dunDict[x]
         except KeyError:
