@@ -73,13 +73,7 @@ class Main:
                 # elif "summon the basilisk of carrows way." in input:
                 #     converse = talkManager()
                 #     output = converse.converse(input)
-                if "items" in input or "item" in input and self.char.state != "cmb":
-                    item_manager = itemManager()
-                    output = item_manager.useItem(input, self.char)
-                elif "look" in input:
-                    output = self.lookAround()
-                    output += self.encounter(userName)
-                elif self.char.state == "wlk":
+                if self.char.state == "wlk":
                     output = self.moveto(input)
                     output += self.lookAround()
                     output += self.encounter(userName)
@@ -107,13 +101,21 @@ class Main:
 
                     # output += self.lookAround()
                     # output += self.encounter()
+                elif "items" in input or "item" in input and self.char.state != "cmb":
+                    item_manager = itemManager()
+                    output = item_manager.useItem(input, self.char)
+                elif "look" in input:
+                    output = self.lookAround()
+                    output += self.encounter(userName)
                 else:
                     output = "This is not a valid option."
 
-                    self.db_mgmt.updateUser(userName, tweetID, createDate, self.char)
-                    # except Exception as e:
-                    #     print('Error: ' + str(e))
-                    #     pass
+
+
+                self.db_mgmt.updateUser(userName, tweetID, createDate, self.char)
+                # except Exception as e:
+                #     print('Error: ' + str(e))
+                #     pass
 
             if self.char.health < 0: # This is intentional.
                 output = "{} has fallen on this day. Their legacy will be remembered as people remember the clouds that bring rain."
@@ -193,12 +195,12 @@ class Main:
         return output
 
     def encounter(self, user):
-        # phs = "xx"
-        # enc = ""
-        # num = 4
-        # third = "4"
-        # forth = "4"
-        # fifth = "4"
+        phs = "xx"
+        enc = ""
+        num = 4
+        third = "4"
+        forth = "4"
+        fifth = "4"
         #
         # looks to see if player has visited square.
         # Research Numpy for possible better design.
@@ -211,27 +213,21 @@ class Main:
         print("Position is...")
         print(self.char.POS)
         if self.char.POS in self.char.tracker: #If encounter exists in this square
-
-            # enc = self.char.POS_Tracker.split("|")[1] # encounter
-            # phs = self.char.POS_Tracker.split("|")[2] # Encounter phase
-            # num = int(self.char.POS_Tracker.split("|")[3]) # number of things in encounter
-            # moveTracker = self.char.POS_Tracker.split("|")[3]
-
-            # x = self.char.tracker.split(",")
-            # for i in x: # Looks for space
-            #     if self.char.POS in i: # If finds space, slices into chunks.
-            #         enc = i.split("|")[1] # encounter
-            #         phs = i.split("|")[2] # Encounter phase
-            #         num = int(i.split("|")[3]) # number of things in encounter
-            #         moveTracker = i.split("|")[3]
-            #         # print(num)
-            #         break
-            if self.char.phaseNum > 0:
-                output = text.get_encounters(self.char.encounter, self.char.phaseNum).split("|")[0]
+            x = self.char.tracker.split(",")
+            for i in x: # Looks for space
+                if self.char.POS in i: # If finds space, slices into chunks.
+                    enc = i.split("|")[1] # encounter
+                    phs = i.split("|")[2] # Encounter phase
+                    num = int(i.split("|")[3]) # number of things in encounter
+                    moveTracker = i.split("|")[3]
+                    # print(num)
+                    break
+            if num > 0:
+                output = text.get_encounters(enc, num).split("|")[0]
                 if self.char.state == "cmb" or self.char.state == "wlk":
-                    output = text.get_special(self.char.phaseNum, self.char.phaseNum) + "|"
+                    output = text.get_special(enc, phs) + "|"
                 if self.char.state == "itr": # 8^4|E|xx|4|4|4
-                    output = text.get_interact(self.char.phaseNum, self.char.phaseNum).split("^")[0]
+                    output = text.get_interact(enc, phs).split("^")[0]
 
                 #     output += " The enemy tries a " + phs
                 #     moves = ["slash", "lunge", "push", "pierce", "riposte", "parry", "feint"]
@@ -240,7 +236,7 @@ class Main:
                 #             output += "|{" + x + "}"
 
             else:
-                output = text.get_encounters(self.char.phaseNum, self.char.phaseNum).split("|")[0]
+                output = text.get_encounters(enc, num).split("|")[0]
 
         #########################################################
         # If new encounter is made, setup here.
@@ -267,13 +263,13 @@ class Main:
                 enc = "R"
             ######################################################### Testers
 
-            output = text.get_encounters(enc, self.char.phaseNum).split("|")  # All encounters set to max
+            output = text.get_encounters(enc, num).split("|")  # All encounters set to max
             self.char.state = output[1]
             output = output[0]
 
             if self.char.state == "cmb": # Go here if state == combat
-                if self.char.phaseNum != "0":
-                    if self.char.phaseNum > 1:  # changes pronoun based on number of enemies in encounter.
+                if num != "0":
+                    if num > 1:  # changes pronoun based on number of enemies in encounter.
                         output += " They"
                     else:
                         output += " It"
@@ -318,17 +314,7 @@ class Main:
             #
             # Temp changed to make sure every passage has an encounter & all encounters set to max.
             #
-            # self.char.tracker += "," + self.char.POS + "|" + self.char.encounter + "|" + phs + "|" + third + "|" + forth + "|" + fifth
-            self.char.tracker += "{}|{}|{}|{}|{}".format(self.char.POS, self.char.encounter, self.char.phase,
-                                                         self.char.phaseNum, self.char.undefined_one,
-                                                         self.char.undefined_two)
-
-            # self.POS_Tracker = i
-            # self.encounter = i.split("|")[1]
-            # self.phase = i.split("|")[2]
-            # self.phaseNum = i.split("|")[3]
-            # self.undefined_one = i.split("|")[4]
-            # self.undefined_two = i.split("|")[5]
+            self.char.tracker += "," + self.char.POS + "|" + enc + "|" + phs + "|" + third + "|" + forth + "|" + fifth
 
 
 

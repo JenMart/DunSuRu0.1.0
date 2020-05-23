@@ -19,50 +19,47 @@ class interactManager:
         #
         # Under construction.
         #
-        # x = char.tracker.split(",")
+        x = char.tracker.split(",")
         text = textDAO("76hj34fejlk")
         parse = parsers()
-        # for i in x:
-        #     if char.POS in i:
-        #         counter = i
-        #         break
-        # enc = counter.split("|")[1]
-        # phs = counter.split("|")[2]
-        # num = counter.split("|")[3]
-        # forth = counter.split("|")[4]
-        # fifth = counter.split("|")[5]
+        for i in x:
+            if char.POS in i:
+                counter = i
+                break
+        enc = counter.split("|")[1]
+        phs = counter.split("|")[2]
+        num = counter.split("|")[3]
+        forth = counter.split("|")[4]
+        fifth = counter.split("|")[5]
 
 
 
-        if char.encounter == "T": # Traps
+        if enc == "T": # Traps
             ablities = text.get_traps("1", None)
 
             choice = parse.parser(ablities, input)
-            if choice:
-                if char.phase in choice:
+            if choice != False:
+                if phs in choice:
                     output = "You deftly avoid the swinging blades."
-                    # char.tracker = char.tracker.replace(enc + str(num), enc + str(0))
-                    char.encounter = "0"
+                    char.tracker = char.tracker.replace(enc + str(num), enc + str(0))
                     char.state = "wlk"
                 else:
                     output = "You fail to dodge the trap."
-                    # char.tracker = char.tracker.replace(enc + str(num), enc + str(0))
-                    char.encounter = "0"
+                    char.tracker = char.tracker.replace(enc + str(num), enc + str(0))
                     char.state = "wlk"
             else:
                 output = "This is not a valid choice."
 
-        elif char.encounter == "L" or char.encounter == "0": # Loot (i.e. treasure)
-            path = text.get_interact(char.encounter, char.phase)
+        elif enc == "L" or enc == "0": # Loot (i.e. treasure)
+            path = text.get_interact(enc, phs)
             choice = parse.parser(path, input)
-            if choice:
-                out = text.get_interact(char.encounter, choice)
+            if choice != False:
+                out = text.get_interact(enc, choice)
                 output = out.split("^")[0]
-                # updateCell = char.POS + "|" + char.encounter + "|" + choice + "|" + "5" + "|" + "5" + "|" + "5"
-                # char.tracker = char.tracker.replace(counter, updateCell)
-                char.phase = choice
+                updateCell = char.POS + "|" + enc + "|" + choice + "|" + "5" + "|" + "5" + "|" + "5"
+                char.tracker = char.tracker.replace(counter, updateCell)
                 char.state = out.split("^")[1]
-                if char.encounter == "0" and choice == "inside":
+                if enc == "0" and choice == "inside":
                     char.WINCON = "Permitted."
                     print("All is well.")
                     # self.db_mgmt.for_this_moment_all_is_well(char.name)

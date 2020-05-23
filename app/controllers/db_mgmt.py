@@ -186,15 +186,7 @@ class DatabaseManager:
             item_list += "{}|{},".format(i, char.items[i])
         item_list = item_list[:-1]
 
-        updated_tracker = "{}|{}|{}|{}|{}|{}".format(char.POS, char.encounter, char.phase, char.phaseNum, char.undefined_one, char.undefined_two)
-        char.tracker.replace(char.POS_Tracker, updated_tracker)
 
-        # self.POS_Tracker = i
-        # self.encounter = i.split("|")[1]
-        # self.phase = i.split("|")[2]
-        # self.phaseNum = i.split("|")[3]
-        # self.undefined_one = i.split("|")[4]
-        # self.undefined_two = i.split("|")[5]
 
         print(item_list)
         CHARACT = ("""UPDATE CHARACTERS SET STATE = '{}', ITEMS = '{}', WINCON = '{}' WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(char.state, item_list, char.WINCON, name))

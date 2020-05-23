@@ -168,11 +168,9 @@ class textDAO:
             "1^1": "p,2^1,x,x,BEREMELETE,You stand in a dusty chamber. The sun kissed entrance is to the {north}. "
                    "To the {south} is carved stone passage."
             ,
-            "2^1": "1^1,x,2^2,x,BEREMELETE,You stand in dimly lit corridor. The passage {south} winds to the east. "
-                     "You feel the touches of light from the {north}."
+            "2^1": "1^1,x,2^2,x,BEREMELETE,You stand in dimly lit corridor. Faint light can be seen from the{North} and the passage winds {South}. "
             ,
-            "2^2": "x,3^2,x,2^1,BEREMELETE,In the ambient light you see words of a forgotten language etched in"
-                     "the walls. To the {south} the light fads further. Soft sounds of wind trickles from the {east}."
+            "2^2": "x,3^2,x,2^1,BEREMELETE,Pale light shows words of a lost language etched in stone. To the {south} the light fads further. Soft wind trickles from the {east}."
             ,
             "3^2": "2^2,4^2,x,x,BEREMELETE,There are stone carvings on the wall but they have faded with time."
                      "out. The passage continues {north} and {south}."
@@ -187,8 +185,7 @@ class textDAO:
             ,
             "6^2": "x,7^2,6^3,x,BEREMELETE,You nearly step into a pit in the floor but manage to pull back in time. The passage winds {south} & continues {east}." # cave, next to path
             ,
-            "6^3": "5^3,x,6^4,6^2,BEREMELETE,You stand at a crossroad. The way [north] leads to the entrance. "
-                     "The way {east] the carved corridor continues. The way {west} is an ancient cave." # The split happens here.
+            "6^3": "5^3,x,6^4,6^2,BEREMELETE,You stand at a crossroad. The way [north] leads to the entrance. The corridor continues {East}. The way {west} shows an ancient cave." # The split happens here.
             ,
             "6^4": "x,7^4,x,6^3,BEREMELETE,Somewhere you hear ragged breathing but you cannot place where. The echoes bounce {south} & {west}."
             ,
