@@ -41,7 +41,7 @@ class talkManager:
                         output = "Your response is invalid."
                     else:
                         output = out.split("|")[-1]
-                        updateCell = self.char.POS + "|" + enc + "|" + response + "|" + "0" + "|" + "0"
+                        updateCell = self.char.POS + "|" + enc + "|" + response + "|" + "5" + "|" + "5" + "|" + "5"
                         self.char.tracker = self.char.tracker.replace(counter, updateCell)
                         self.char.state = out[-3:]
                     break

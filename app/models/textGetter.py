@@ -37,63 +37,88 @@ class textDAO:
             1: " a defeated trap..|itr",
             2: " a sprung trap|itr",
             3: " a disarmed trap.|itr",
-            4: " a trap about to sprint.|itr"
+            4: " a trap about to spring.|itr"
         }
         puzzleDict= {
             "x": "You have solved the puzzle|wlk",
-            0: " a solved puzzle|wlk",
-            1: " a puzzle with one X's.|PZL",
-            2: " a puzzle with two X's.|PZL",
-            3: " a puzzle with three X's.|PZL",
-            4: " a puzzle with four X's.|PZL"
+            0: " You see a solved puzzle|wlk",
+            1: " You see a nearly solved puzzle|PZL",
+            2: " You see a puzzle.|PZL",
+            3: " You see a puzzle.|PZL",
+            4: " You see a puzzle.|PZL"
         }
-        encDict= {
-            "P": puzzleDict[y]
-            , "R": ratDict[y]
-            , "M": monsterDic[y]
-            , "L": " You come across a treasure chest.|itr"
-            , "0": " The way is cleared. You see a chest.|itr"
-            , "T": trapDict[y]
-            , "B": banditDic[y]
-            , "N": " An angry bandit brandishing a weapon.|cmb"
-            , "Z": " The Basilisk of Carrows Way appears before you.|tlk"
-            , "E": " You are alone.{Walk}|wlk"
-        }
-        return encDict[x]
+        # encDict= {
+        #     "P": puzzleDict[y]
+        #     , "R": ratDict[y]
+        #     , "M": monsterDic[y]
+        #     , "L": " You come across a treasure chest.|itr"
+        #     , "0": " The way is cleared. You see a chest.|itr"
+        #     , "T": trapDict[y]
+        #     , "B": banditDic[y]
+        #     , "N": " An angry bandit brandishing a weapon.|cmb"
+        #     , "Z": " The Basilisk of Carrows Way appears before you.|tlk"
+        #     , "E": " You are alone.{Walk}|wlk"
+        # }
+
+        if x == "P":
+            output = puzzleDict[y]
+        elif x == "R":
+            output= ratDict[y]
+        elif x == "M":
+            output = monsterDic[y]
+        elif x == "L":
+            output = " a treasure chest.|itr"
+        elif x == "0":
+            output = " You see a chest.|itr"
+        elif x == "T":
+            output = trapDict[y]
+        elif x == "B":
+            output = banditDic[y]
+        elif x == "N":
+            output = " An angry bandit brandishing a weapon.|cmb"
+        elif x == "Z":
+            output = " The Basilisk of Carrows Way appears before you.|tlk"
+        elif x == "E":
+            output = " You are alone.{Walk}|wlk"
+        elif x == "H":
+            return "For the moment there is respite. Do you brave the depths of Carrows Way again?| {Yes} or {No}."
+
+
+        return output
 
     def get_puzzle(self, x):
         #
         # a | 
         #
         puzzleDict = {
-            "x":"Choose the {Top}, {Bottom} or {Middle} disk | Then choose to rotate {Right} or {Left}"
+            "x":" Choose the {Top}, {Bottom} or {Middle} disk | Then choose to rotate {Right} or {Left}"
         }
         return puzzleDict[x]
 
     def get_special(self, x, y):
         banditDict = {
             "xx": "|",
-            "PSF": " |{Attack}|{Free Shot}|{Item}|{Talk}",
-            "ESF": " |{Attack}|{Item}",
-            "BP": " |{Attack}|{Item}"
+            "PSF": " | {Attack} | {Free Shot} | {Item} | {Talk}",
+            "ESF": " | {Attack} | {Item}",
+            "BP": " | {Attack} | {Item}"
         }
         ratDict = {
             "xx": "|",
-            "PSF": " |{Attack}|{Free Shot}|{Item}",
-            "ESF": " |{Attack}|{Item}",
-            "BP": " |{Attack}|{Item}"
+            "PSF": " | {Attack} | {Free Shot} | {Item}",
+            "ESF": " | {Attack} | {Item}",
+            "BP": " | {Attack} | {Item}"
         }
         monsterDict = {
             "xx": "|",
-            "PSF": " |{Attack}|{Free Shot}|{Items}",
-            "ESF": " |{Attack}|{Item}",
-            "BP": " |{Attack}|{Item}"
+            "PSF": " | {Attack} | {Free Shot} | {Items}",
+            "ESF": " | {Attack} | {Item}",
+            "BP": " | {Attack} | {Item}"
         }
         trapDict = {
-            "xx":"|{ITEM}|{disarm}"
+            "xx":"| {Item} | {Disarm}"
         }
         hallDict = {
-            "xx": "|{item}|{look}"
+            "xx": "| {Item} | {Look}"
         }
         if x == "T":
             return trapDict[y]
@@ -116,7 +141,6 @@ class textDAO:
         # }
 
     def get_damage(self, x, job):
-        print(job)
         dmgDictBandit = {
             "free Shot": "You strike the unaware opponent and deal $$ damage.|1"
             , "item": "You throw a vile of alchemist fire and deal $$ damage.|1"
@@ -139,23 +163,48 @@ class textDAO:
         # BEREMELETE
         #
         dunDict = { # Direction discription order: North, South, East, West
-            "1^1": "p,2^1,x,x,BEREMELETE,You stand in a dusty chamber. The sun kissed entrance is to the {north}. To the {south} is carved stone passage."
-            , "2^1": "1^1,x,2^2,x,BEREMELETE,You stand in dimly lit corridor. The passage {south} winds to the east. You feel the touches of light from the {north}."
-            , "2^2": "x,3^2,x,2^1,BEREMELETE,In the ambient light you see words of a forgotten language etched in the walls. To the {south} the light fads further. Soft sounds of wind trickles from the {east}."
-            , "3^2": "2^2,4^2,x,x,BEREMELETE,Your candle reflects stone carvings on the wall but you can't make them out. The passage continues {north} and {south}."
-            , "4^2": "3^2,x,4^3,x,BEREMELETE,You rely on your candle for aid against the gloom. The passage moves {north} and turns sharply to the {east}."
-            , "4^3": "x,5^3,x,4^2,BEREMELETE,The din is oppressive. You see the passage leading {south} and turning sharply {west}."
-            , "5^3": "4^3,6^3,x,x,BEREMELETE,You feel the darkness at your heels. "
-            , "6^2": "x,7^2,6^3,x,BEREMELETE,You nearly step into a pit in the floor but manage to pull back in time." # cave, next to path
-            , "6^3": "5^3,x,6^4,6^2,BEREMELETE,You stand at a crossroad. The way [north] leads to the entrance. The way {east] the carved corridor continues. The way {west} is an ancient cave." # The split happens here.
-            , "6^4": "x,7^4,x,6^3,BEREMELETE,Somewhere you hear ragged breathing but you can't place where."
-            , "7^2": "6^2,8^2,x,x,BEREMELETE,You see scratches in the walls and floor of the cave that look almost like brick. " # cave
-            , "7^4": "6^4,8^4,x,x,BEREMELETE,Your footsteps echo down the long."
-            , "8^2": "7^2,x,8^3,x,BEREMELETE,The smell of mildew and refuse is everywhere." # cave, next to path.
-            , "8^3": "x,x,8^4,8^2,BEREMELETE,Along the path, you see scrap marks along the walls"
-            , "8^4": "7^4,9^4,8^5,8^3,EEEEEBEEEE,You stand in a circular room. In the center stands a pile of stones.  " # The spot.
-            , "8^5": "x,x,x,8^4,BEREMELETE,A cave in blocks your path. "
-            , "9^4": "8^4,x,x,x,BEREMELETE,The hall ends suddenly."
+            "p":"x,1^1,x,x,H,The blessing of the sun warms your core."
+            ,
+            "1^1": "p,2^1,x,x,BEREMELETE,You stand in a dusty chamber. The sun kissed entrance is to the {north}. "
+                   "To the {south} is carved stone passage."
+            ,
+            "2^1": "1^1,x,2^2,x,BEREMELETE,You stand in dimly lit corridor. The passage {south} winds to the east. "
+                     "You feel the touches of light from the {north}."
+            ,
+            "2^2": "x,3^2,x,2^1,BEREMELETE,In the ambient light you see words of a forgotten language etched in"
+                     "the walls. To the {south} the light fads further. Soft sounds of wind trickles from the {east}."
+            ,
+            "3^2": "2^2,4^2,x,x,BEREMELETE,There are stone carvings on the wall but they have faded with time."
+                     "out. The passage continues {north} and {south}."
+            ,
+            "4^2": "3^2,x,4^3,x,BEREMELETE,You rely on your candle for aid against the gloom. "
+                     "The passage moves {north} and turns sharply to the {east}."
+            ,
+            "4^3": "x,5^3,x,4^2,BEREMELETE,The din is oppressive. You see the passage leading {south} "
+                     "and turning sharply {west}."
+            ,
+            "5^3": "4^3,6^3,x,x,BEREMELETE,You feel the darkness at your heels. The passage way stretches {north} & {south}."
+            ,
+            "6^2": "x,7^2,6^3,x,BEREMELETE,You nearly step into a pit in the floor but manage to pull back in time. The passage winds {south} & continues {east}." # cave, next to path
+            ,
+            "6^3": "5^3,x,6^4,6^2,BEREMELETE,You stand at a crossroad. The way [north] leads to the entrance. "
+                     "The way {east] the carved corridor continues. The way {west} is an ancient cave." # The split happens here.
+            ,
+            "6^4": "x,7^4,x,6^3,BEREMELETE,Somewhere you hear ragged breathing but you cannot place where. The echoes bounce {south} & {west}."
+            ,
+            "7^2": "6^2,8^2,x,x,BEREMELETE,You see scratches in the walls and floor of the cave that look almost like brick. The cave continues {north} & {south}." # cave
+            ,
+            "7^4": "6^4,8^4,x,x,BEREMELETE,Your footsteps echo down the long. The passage continues {north} & {south}."
+            ,
+            "8^2": "7^2,x,8^3,x,BEREMELETE,The smell of mildew and refuse is everywhere. The cave continues {north}. Hidden way, you see a carved passage way to the {west}." # cave, next to path.
+            ,
+            "8^3": "x,x,8^4,8^2,BEREMELETE,Along the path, you see scrap marks along the walls. The passage continues {west} and {east}."
+            ,
+            "8^4": "7^4,9^4,8^5,8^3,EEEEEBEEEE,You stand in a circular room with passage ways in every direction. In the center stands a pile of stones." # The spot.
+            ,
+            "8^5": "x,x,x,8^4,BEREMELETE,A cave in blocks your path. The only way is to backtrack {east}."
+            ,
+            "9^4": "8^4,x,x,x,BEREMELETE,The hall ends suddenly. You see a pile of stones to the {north}."
         } # 16+1 squares
         try:
             return dunDict[x]
@@ -189,15 +238,23 @@ class textDAO:
         }
 
         secretTreasureDict = {
-            "start": "Behind the debris you see an unlocked chest.| {Open} the lid.| Examine the {sides}.| Example the {lock}.^itr"
-            , "open": "The lid slides open without protest.| look {inside}.^itr"
-            , "lock": "You see no lock. The lids awaits to be opened.| {Open} the lid.| Examine the {sides}.^itr"
-            , "force": "There is nothing to force, you do not need to struggle to obtain this prize.| {Open} the lid.| Examine the {sides}.^itr"
-            , "pick": "There is no lock to pick.| {Open} the lid.| Examine the {sides}.^itr"
-            , "side": "You walk around the sides. It is an ordinary chest.| {Open} the check | {Walk} away.^itr"
-            , "leave" : "It it foolish to accept your accomplishments or to deny them? | Accept and {open} the lid| {Deny} and walk away.^itr"
-            , "deny" : "You walk away.^wlk"
-            , "inside": "Inside you see a fragment of parchment, barely legible in this light.^wlk"
+            "start": " You see a chest waiting in the darkness. It is small enough to fit in your hand.| {Open} the lid.| Examine the {sides}.| Examine the {lock}.^itr"
+            ,
+            "open": " The lid slides open without protest.| look {inside}.^itr"
+            ,
+            "lock": " You see no lock. The lids awaits to be opened.| {Open} the lid.| Examine the {sides}.^itr"
+            ,
+            "force": " There is nothing to force, you do not need to struggle to obtain this prize.| {Open} the lid.| Examine the {sides}.^itr"
+            ,
+            "pick": " There is no lock to pick.| {Open} the lid.| Examine the {sides}.^itr" # Currently inaccessible
+            ,
+            "sides": " You walk around the sides. It is an ordinary chest.| {Open} the check | {leave} the chest and walk away.^itr"
+            ,
+            "leave" : " Is it foolish to accept your accomplishments or is it foolish to deny them? | Accept and {open} the lid| {Deny} and walk away.^itr"
+            ,
+            "deny" : " You walk away.^wlk"
+            ,
+            "inside": " Inside you find a fragment of parchment, barely legible in this light. You place it in your pocket.^wlk"
         }
 
         if x == "L":

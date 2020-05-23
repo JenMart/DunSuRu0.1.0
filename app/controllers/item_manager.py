@@ -13,34 +13,44 @@ class itemManager:
         self.textDAO = textDAO
 
     def useItem(self, input, char):
-        itemsCut = char.items.lower().split(",")
+        # itemsCut = char.items.lower().split(",")
         output = ""
         if "show" in input:
-            output = "You hold in your possession: "
-            for i in itemsCut:
-                output += i.replace("|"," x") + ", "
+            output = "You hold in your possession:"
+            for i in char.items:
+                output += " {} {},".format(char.items[i], i.capitalize())
             output = output[:-1]
         elif "use" in input:
-            for i in itemsCut:
-                i = i.split("|")[0]
+            for i in char.items:
                 print(i)
-                if input == "use item egg":
-                    print("pip[ppp")
                 if i in input:
-                    if "candle" in input:   # Secrets.
-                        if char.POS == "8^4":
-                            char.state = "itr"
-                            char.track.replace("8^4|e|xx|5|5|5","8^4|0|start|5|5|5")
-                            output = " You blow out the candle. In the shining darkness, you see a chest."
-                            break
-                        else:
-                            output = "You do not blow out the candle. Not yet."
-                            break
+                    if char.state == "cmb": # Holy Water|1,Alch Fire|3,Egg|5,lit candle|1
+                        if char.encounter == "R":
+                            if "alch fire" in input:
+                                char.phaseNum -= random.randint(2, 4)
+                                char.items.update({i: str(int(char.items[i]) - 1)})
                     else:
-                        output = "You use " + i
-                        break
+                        if "candle" in input:   # Secrets.
+                            if char.POS == "8^4":
+                                char.state = "itr"
+                                # char.tracker = char.tracker.replace("8^4|E|xx|4|4|4","8^4|0|start|5|5|5")
+                                char.encounter = "0"
+                                char.phase = "start"
+                                output = " You blow out the candle. In the shining darkness, you see a chest." \
+                                         "| {Open} the lid.| Examine the {sides}.| Examine the {lock}."
+                                char.items.update({i: str(int(char.items[i]) - 1)})
+                                break
+                            else:
+                                output = "You do not blow out the candle. Not yet."
+                                break
+                        else:
+                            output = "You use {}. Nothing happens.".format(i.capitalize())
+                            char.items.update({i: str(int(char.items[i])-1)})
+                            break
                 else:
                     output = "You do not possess this item."
         else:
             output = "You have selected an invalid option."
+
+
         return output

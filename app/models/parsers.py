@@ -14,11 +14,10 @@ class parsers:
 
     def parser(self, text, input):
         output = ""
-        print(text[0])
-        for i in text: # Note: Text is assumed to be pre-split up before being sent to parser.
+        for i in text.split(" "): # Note: Text is assumed to be pre-split up before being sent to parser.
             textParsed = re.search('{(.*)}', i)  # Searched for any word (options) surrounded by curly brackets.
             if textParsed is None:
-                return False # I don't think it's actually possible to get here.
+                output = False
             else:
                 action = textParsed.group(0)[1:-1].lower()  # Removes curly brackets.
                 # Looks for instances of options in input- allows user to write full sentences.

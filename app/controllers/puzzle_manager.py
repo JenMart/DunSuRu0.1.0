@@ -12,7 +12,6 @@ class puzzleManager:
     def __init__(self):
         self.CharDAO = CharDAO
         self.textDAO = textDAO
-        self.parser = parsers
 
     def puzzles(self, input, char):
         #
@@ -20,6 +19,7 @@ class puzzleManager:
         #
         text = textDAO("76hj34fejlk")
         x = char.tracker.split(",")
+        parse = parsers()
         for i in x:
             if char.POS in i:
                 counter = i
@@ -45,33 +45,38 @@ class puzzleManager:
         middle = int(forth[1])
         bottom = int(forth[2])
         ablities = text.get_puzzle("x").split("|")
-        puzzleChoiceOne = parsers.parser("blank this",ablities[0], input) # Top/middle/bottom
-        puzzleChoiceTwo = parsers.parser("blact",ablities[1], input) # Right/left
+        puzzleChoiceOne = parse.parser(ablities[0], input) # Top/middle/bottom
+        puzzleChoiceTwo = parse.parser(ablities[1], input) # Right/left
 
 
 
-        if "right" in puzzleChoiceTwo.lower():
-            if puzzlePieces[puzzleChoiceOne] + 1 <= 2:
-                puzzlePieces[puzzleChoiceOne] += 1
-                output = "You have moved the " + puzzleChoiceOne + " to the " + puzzleChoiceTwo
-            else:
-                output = "You cannot turn the puzzle this direction"
-        elif "left" in puzzleChoiceTwo.lower():
-            if puzzlePieces[puzzleChoiceOne] - 1 >= 0:
-                puzzlePieces[puzzleChoiceOne] -= 1
-                output = "You have moved the " + puzzleChoiceOne + " to the " + puzzleChoiceTwo
-            else:
-                output = "You cannot turn the puzzle this direction"
+
 
 
 
         if puzzleChoiceOne != False and puzzleChoiceTwo != False:
+            if "right" in puzzleChoiceTwo.lower():  # here?
+                if puzzlePieces[puzzleChoiceOne] + 1 <= 2:
+                    puzzlePieces[puzzleChoiceOne] += 1
+                    output = "You have moved the " + puzzleChoiceOne + " to the " + puzzleChoiceTwo
+                else:
+                    output = "You cannot turn the puzzle this direction"
+            elif "left" in puzzleChoiceTwo.lower():
+                if puzzlePieces[puzzleChoiceOne] - 1 >= 0:
+                    puzzlePieces[puzzleChoiceOne] -= 1
+                    output = "You have moved the " + puzzleChoiceOne + " to the " + puzzleChoiceTwo
+                else:
+                    output = "You cannot turn the puzzle this direction"
+
             forth = str(puzzlePieces["top"]) + str(puzzlePieces["middle"]) + str(puzzlePieces["bottom"])
-            third = forth.count("1")
-            if third < 3:
+            # print("what puzzle looks like")
+            # print(forth)
+            if forth != "111":
+                third = 4
                 updateEncounter = text.get_encounters(enc, third).split("|")
-                output += ". Top: " + str(shift[puzzlePieces[list(puzzlePieces)[0]]]) + ", Middle: " + str(shift[puzzlePieces[list(puzzlePieces)[1]]]) + ", Bottom "
-                output += shift[puzzlePieces[list(puzzlePieces)[2]]] + ". There are " + updateEncounter[0]
+                output += ". You see..." +". Top: " + str(shift[puzzlePieces[list(puzzlePieces)[0]]]) + ", Middle: " \
+                          + str(shift[puzzlePieces[list(puzzlePieces)[1]]]) + ", Bottom " + shift[puzzlePieces[list(puzzlePieces)[2]]]  + "." + updateEncounter[0]
+                output += text.get_puzzle("x")
                 # You have moved the bottom to the right. Top: X Middle: V Bottom: I
                 char.state = updateEncounter[1]
             else:
@@ -79,6 +84,7 @@ class puzzleManager:
                 output += updateEncounter[0] + " The passage is now empty."
                 third = 0
                 char.state = updateEncounter[1]
+
         else:
             output = "You have not selected a valid option."
     

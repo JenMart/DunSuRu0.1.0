@@ -107,8 +107,8 @@ class DatabaseManager:
         region = "tester"
         state = "wlk"
         pos = "1^1"
-        tracker = "1^1|E|NP|0"
-        items = "Holy Water|1,Alch Fire|3,Egg|5,lit candle|1"
+        tracker = "1^1|E|NP|0|0|0"
+        items = "holy water|1,alch fire|3,egg|5,lit candle|1"
         wincon = "false"
         CHARACTER = (
             """INSERT INTO CHARACTERS(USER, NAME, JOB, HEALTH, GOLD, ITEMS, STATE, REGIONTYPE, REGION, WINCON) VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')"""
@@ -148,6 +148,23 @@ class DatabaseManager:
         print("character successfully deleted")
         return
 
+    def delete_all_characters(self):
+        PLAYERTRACKER = (
+            """DELETE FROM PLAYERTRACKER""")
+
+        CHARACTER = (
+            """DELETE FROM CHARACTERS""")
+        USER = (
+            """DELETE FROM USERS""")
+
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute(PLAYERTRACKER)
+        sql_worker.execute(CHARACTER)
+        sql_worker.execute(USER)
+        sql_worker.close()
+        print("The deed is done. All characters successfully deleted")
+        return
+
     def character_death(self, username, char):
         CHARACTER = ("""DELETE FROM CHARACTERS WHERE VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(username))
         PLAYERTRACKER = (
@@ -162,21 +179,25 @@ class DatabaseManager:
 
         return
 
-    graveyard = """CREATE TABLE GRAVEYARD (
-
-
-
-                JOB VARCHAR(255) NOT NULL,
-                GOLD INT NOT NULL,
-                FOREIGN KEY(USER) REFERENCES USERS(ID)
-                )
-                """
-
-
-
     def updateUser(self, name, tweetID, date, char):
 
-        CHARACT = ("""UPDATE CHARACTERS SET STATE = '{}', ITEMS = '{}' WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(char.state, char.items, name))
+        item_list = ""
+        for i in char.items: # holy water|1,alch fire|3,egg|5,lit candle|1
+            item_list += "{}|{},".format(i, char.items[i])
+        item_list = item_list[:-1]
+
+        updated_tracker = "{}|{}|{}|{}|{}|{}".format(char.POS, char.encounter, char.phase, char.phaseNum, char.undefined_one, char.undefined_two)
+        char.tracker.replace(char.POS_Tracker, updated_tracker)
+
+        # self.POS_Tracker = i
+        # self.encounter = i.split("|")[1]
+        # self.phase = i.split("|")[2]
+        # self.phaseNum = i.split("|")[3]
+        # self.undefined_one = i.split("|")[4]
+        # self.undefined_two = i.split("|")[5]
+
+        print(item_list)
+        CHARACT = ("""UPDATE CHARACTERS SET STATE = '{}', ITEMS = '{}', WINCON = '{}' WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(char.state, item_list, char.WINCON, name))
         USER = ("""UPDATE USERS SET TWEETID = '{}', DATESTAMP = '{}', LASTMESSAGE = '{}' WHERE USERNAME = '{}'""".format(tweetID, str(date), "null", name))
         PLAYERTRACKER = ("""UPDATE PLAYERTRACKER SET POS = '{}', TRACKER = '{}' WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME ='{}')""".format(char.POS, char.tracker, name))
 
@@ -206,7 +227,7 @@ class DatabaseManager:
         sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
         sql_worker.execute(CHARACT)
         sql_worker.close()
-
+        print("All is well.")
         return
 
     def checkUser(self, name):
@@ -254,7 +275,8 @@ class DatabaseManager:
         cursor = sqlite3.connect('SkyTweetRun.sqlite')
         c = cursor.cursor()
         c.execute("""SELECT CHARACTERS.NAME, CHARACTERS.JOB, CHARACTERS.HEALTH, CHARACTERS.GOLD, CHARACTERS.ITEMS,
-                    CHARACTERS.STATE, PLAYERTRACKER.REGION, PLAYERTRACKER.TYPE, PLAYERTRACKER.POS, PLAYERTRACKER.TRACKER
+                    CHARACTERS.STATE, PLAYERTRACKER.REGION, PLAYERTRACKER.TYPE, PLAYERTRACKER.POS, PLAYERTRACKER.TRACKER,
+                    CHARACTERS.WINCON
                      FROM CHARACTERS JOIN PLAYERTRACKER ON
                     CHARACTERS.ID = PLAYERTRACKER.CHAR WHERE USER =
                     (SELECT ID FROM USERS WHERE USERNAME = ?)""",(name,))

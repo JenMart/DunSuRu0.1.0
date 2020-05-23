@@ -5,12 +5,14 @@ import random
 import re
 from time import gmtime, strftime
 from app.models.textGetter import textDAO
+from app.models.parsers import parsers
 
 class combatManager:
 
     def __init__(self):
         charDAO = CharDAO
         self.textDAO = textDAO
+        self.parser = parsers
 
 
     def meleeCombat(self, input, char):
@@ -133,14 +135,14 @@ class combatManager:
     def groupCombat(self, input, char):
         text = textDAO("ntergo;ybw")
         damage = 0
-        tracker = char.tracker.split(",")
-        for i in tracker:
-            if char.POS in i:
-                counter = i
-                break
-        enc = counter.split("|")[1]  # encounter
-        phase = counter.split("|")[2]  # Encounter phase
-        num = int(counter.split("|")[3])  # number of things in encounter
+        # tracker = char.tracker.split(",")
+        # for i in tracker:
+        #     if char.POS in i:
+        #         counter = i
+        #         break
+        # enc = counter.split("|")[1]  # encounter
+        # phase = counter.split("|")[2]  # Encounter phase
+        # num = int(counter.split("|")[3])  # number of things in encounter
 
         #
         # Keeping this around for now in case the new setup breaks.
@@ -163,24 +165,34 @@ class combatManager:
         # #####################
 
         ##################### New setup,
-        abilities = text.get_special(enc, phase).split("|")
-        textCheck = self.parser(abilities, input)
-        if textCheck != False:
-            damage = text.get_damage(textCheck, "bandit").split("|")
-            num -= int(damage[1])
-        else:
-            damage = ["that is not a valid option you do $$ damage.", 0]
+        parse = parsers()
+        abilities = text.get_special(char.encounter, char.phase)
+        textCheck = parse.parser(abilities, input)
+
         #####################
-        if num > 0:
-            updateCell = char.POS + "|" + enc + "|" + "BP" + "|" + str(num)
+
+        if textCheck != False:
+            if textCheck == "attack":
+                damage = text.get_damage(textCheck, "bandit").split("|")
+                char.phaseNum -= int(damage[1])
+            if textCheck == "item": # Holy Water|1,Alch Fire|3,Egg|5,lit candle|1
+                if char.encounter == "R":
+                    if "alch fire" in input:
+                        char.phaseNum -= random.randint(2, 4)
+            else:
+                damage = ["that is not a valid option you do $$ damage.", 0]
+
+        #####################
+        if char.phaseNum > 0:
+            updateCell = char.POS + "|" + char.encounter + "|" + "BP" + "|" + str(char.phaseNum )
             char.tracker = char.tracker.replace(counter, updateCell)
-            updateEncount = text.get_encounters(enc, num).split("|")
-            output = damage[0].replace("$$",str(damage[1])) +  updateEncount[0] + text.get_special(enc,phase)
+            updateEncount = text.get_encounters(char.encounter, char.phaseNum).split("|")
+            output = damage[0].replace("$$",str(damage[1])) +  updateEncount[0] + text.get_special(char.encounter, char.phase)
             char.state = updateEncount[1]
         else:
-            updateCell = char.POS + "|" + enc + "|" + "EP" + "|" + str(0)
+            updateCell = char.POS + "|" + char.encounter + "|" + "EP" + "|" + str(0)
             char.tracker = char.tracker.replace(counter, updateCell)
-            updateEncount = text.get_encounters(enc, "x").split("|")
+            updateEncount = text.get_encounters(char.encounter, "x").split("|")
             output = updateEncount[0] + " The passage is now empty."
             char.state = updateEncount[1]
         return output

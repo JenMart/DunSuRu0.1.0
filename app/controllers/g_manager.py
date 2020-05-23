@@ -54,7 +54,7 @@ class Main:
                 charTuple = self.db_mgmt.pullCharacter(userName)
                 self.char = CharDAO(charTuple[0], charTuple[1], int(charTuple[2]), charTuple[3], charTuple[4], charTuple[5],
                                     charTuple[6],
-                                    charTuple[7], charTuple[8], charTuple[9])
+                                    charTuple[7], charTuple[8], charTuple[9], charTuple[10])
                 output = new_char.newCharacter(userName)
                 output += self.lookAround()
             else:
@@ -64,52 +64,59 @@ class Main:
             charTuple = self.db_mgmt.pullCharacter(userName)
             self.char = CharDAO(charTuple[0], charTuple[1], charTuple[2], charTuple[3], charTuple[4], charTuple[5],
                                 charTuple[6],
-                                charTuple[7], charTuple[8], charTuple[9])
+                                charTuple[7], charTuple[8], charTuple[9], charTuple[10])
 
-            if "items" in input or "item" in input:
-                item_manager = itemManager()
-                output = item_manager.useItem(input, self.char)
-            elif "look" in input:
-                output = self.lookAround()
-            elif "summon the basilisk of carrows way." in input:
-                converse = talkManager()
-                output = converse.converse(input)
-            elif self.char.state == "wlk":
-                output = self.moveto(input)
-                output += self.lookAround()
-                output += self.encounter(userName)
-            elif self.char.state == "cmb":
-                combat_manager = combatManager()
-                output = combat_manager.groupCombat(input, self.char)
-                # output += self.lookAround()
-                # output += self.encounter()
-            elif self.char.state == "mel": #Two sep combat types. May combine later.
-                combat_manager = combatManager()
-                output = combat_manager.meleeCombat(input, self.char)
-                # output += self.lookAround()
-                # output += self.encounter()
-            elif self.char.state == "itr":
-                interact = interactManager()
-                output = interact.interact(input, self.char)
-                # output += self.lookAround()
-                # output += self.encounter()
-            elif self.char.state == "tlk":
-                talk_manager = talkManager()
-                output = talk_manager.converse(input)
-            elif self.char.state == "PZL":
-                puz = puzzleManager()
-                output = puz.puzzles(input, self.char)
-                # output += self.lookAround()
-                # output += self.encounter()
+            if self.char.POS == "p":
+                None
             else:
-                output = "This is not a valid option."
-            self.db_mgmt.updateUser(userName, tweetID, createDate, self.char)
-            # except Exception as e:
-            #     print('Error: ' + str(e))
-            #     pass
 
-        if self.char.health < 0: # This is intentional.
-            output = "{} has fallen on this day. Their legacy will be remembered as people remember the clouds that bring rain."
+                # elif "summon the basilisk of carrows way." in input:
+                #     converse = talkManager()
+                #     output = converse.converse(input)
+                if "items" in input or "item" in input and self.char.state != "cmb":
+                    item_manager = itemManager()
+                    output = item_manager.useItem(input, self.char)
+                elif "look" in input:
+                    output = self.lookAround()
+                    output += self.encounter(userName)
+                elif self.char.state == "wlk":
+                    output = self.moveto(input)
+                    output += self.lookAround()
+                    output += self.encounter(userName)
+                elif self.char.state == "cmb":
+                    combat_manager = combatManager()
+                    output = combat_manager.groupCombat(input, self.char)
+                    # output += self.lookAround()
+                    # output += self.encounter()
+                elif self.char.state == "mel": #Two sep combat types. May combine later.
+                    combat_manager = combatManager()
+                    output = combat_manager.meleeCombat(input, self.char)
+                    # output += self.lookAround()
+                    # output += self.encounter()
+                elif self.char.state == "itr":
+                    interact = interactManager()
+                    output = interact.interact(input, self.char)
+                    # output += self.lookAround()
+                    # output += self.encounter()
+                elif self.char.state == "tlk":
+                    talk_manager = talkManager()
+                    output = talk_manager.converse(input)
+                elif self.char.state == "PZL":
+                    puz = puzzleManager()
+                    output = puz.puzzles(input, self.char)
+
+                    # output += self.lookAround()
+                    # output += self.encounter()
+                else:
+                    output = "This is not a valid option."
+
+                    self.db_mgmt.updateUser(userName, tweetID, createDate, self.char)
+                    # except Exception as e:
+                    #     print('Error: ' + str(e))
+                    #     pass
+
+            if self.char.health < 0: # This is intentional.
+                output = "{} has fallen on this day. Their legacy will be remembered as people remember the clouds that bring rain."
 
         return output
 
@@ -124,16 +131,16 @@ class Main:
         eas = dungeon.get_Dungeon(self.char.POS).split(",")[2]
         wes = dungeon.get_Dungeon(self.char.POS).split(",")[3]
         if "north" in imp and nor != "x":
-            output = "You go north."
+            output = "You go north. "
             self.char.POS = nor
         elif "south" in imp and sou != "x":
-            output = "You go south."
+            output = "You go south. "
             self.char.POS = sou
         elif "east" in imp and eas != "x":
-            output = "You go east."
+            output = "You go east. "
             self.char.POS = eas
         elif "west" in imp and wes != "x":
-            output = "You go west."
+            output = "You go west. "
             self.char.POS = wes
         else:
             output = "This is not a valid choice."
@@ -141,37 +148,44 @@ class Main:
         # If player attempts to leave, system currently places them back at starting square.
         #
         if self.char.POS == "p":
-            self.char.POS = "1^1"
-            output = "The exit is closed off."
+            if self.char.WINCON == "Permitted.":
+                output = "You step in the sun. For the moment there is respite. Do you brave the depths of Carrows Way again?| {Yes} or {No}."
+            else:
+                self.char.POS = "1^1"
+                output = "The exit is closed off."
         return output
 
     def lookAround(self):
         output = " You see"
         text = textDAO("pojihudew")
-        nor = text.get_Dungeon(self.char.POS).split(",")[0]
-        sou = text.get_Dungeon(self.char.POS).split(",")[1]
-        eas = text.get_Dungeon(self.char.POS).split(",")[2]
-        wes = text.get_Dungeon(self.char.POS).split(",")[3]
-        if nor != "x":
-            if nor == "p":
-               output += " the exit to the north,"
-            else:
-               output += " a passage north,"
-        if sou != "x":
-            if sou == "p":
-               output += " the exit to the south,"
-            else:
-               output += " a passage south,"
-        if eas != "x":
-            if eas == "p":
-               output += " the exit to the east,"
-            else:
-               output += " a passage east,"
-        if wes != "x":
-            if wes == "p":
-               output += " The exit to the west,"
-            else:
-               output += " a passage west,"
+        dungeon = text.get_Dungeon(self.char.POS)
+        nor = dungeon.split(",")[0]
+        sou = dungeon.split(",")[1]
+        eas = dungeon.split(",")[2]
+        wes = dungeon.split(",")[3]
+        des = dungeon.split(",")[5]
+
+        output = des
+        # if nor != "x":
+        #     if nor == "p":
+        #        output += " the exit to the north,"
+        #     else:
+        #        output += " a passage north,"
+        # if sou != "x":
+        #     if sou == "p":
+        #        output += " the exit to the south,"
+        #     else:
+        #        output += " a passage south,"
+        # if eas != "x":
+        #     if eas == "p":
+        #        output += " the exit to the east,"
+        #     else:
+        #        output += " a passage east,"
+        # if wes != "x":
+        #     if wes == "p":
+        #        output += " The exit to the west,"
+        #     else:
+        #        output += " a passage west,"
         #
         # Replaces last character with a period.
         #
@@ -179,12 +193,12 @@ class Main:
         return output
 
     def encounter(self, user):
-        phs = "xx"
-        enc = ""
-        num = 4
-        first = "4"
-        second = "4"
-        third = "4"
+        # phs = "xx"
+        # enc = ""
+        # num = 4
+        # third = "4"
+        # forth = "4"
+        # fifth = "4"
         #
         # looks to see if player has visited square.
         # Research Numpy for possible better design.
@@ -197,21 +211,28 @@ class Main:
         print("Position is...")
         print(self.char.POS)
         if self.char.POS in self.char.tracker: #If encounter exists in this square
-            x = self.char.tracker.split(",")
-            for i in x: # Looks for space
-                if self.char.POS in i: # If finds space, slices into chunks.
-                    enc = i.split("|")[1] # encounter
-                    phs = i.split("|")[2] # Encounter phase
-                    num = int(i.split("|")[3]) # number of things in encounter
-                    moveTracker = i.split("|")[3]
-                    # print(num)
-                    break
-            if num > 0:
-                output = text.get_encounters(enc, num).split("|")[0]
-                if self.char.state != "mel" and self.char.state !="PZL":
-                    output += text.get_special(enc, phs) + "|"
-                else:
-                    output = ""
+
+            # enc = self.char.POS_Tracker.split("|")[1] # encounter
+            # phs = self.char.POS_Tracker.split("|")[2] # Encounter phase
+            # num = int(self.char.POS_Tracker.split("|")[3]) # number of things in encounter
+            # moveTracker = self.char.POS_Tracker.split("|")[3]
+
+            # x = self.char.tracker.split(",")
+            # for i in x: # Looks for space
+            #     if self.char.POS in i: # If finds space, slices into chunks.
+            #         enc = i.split("|")[1] # encounter
+            #         phs = i.split("|")[2] # Encounter phase
+            #         num = int(i.split("|")[3]) # number of things in encounter
+            #         moveTracker = i.split("|")[3]
+            #         # print(num)
+            #         break
+            if self.char.phaseNum > 0:
+                output = text.get_encounters(self.char.encounter, self.char.phaseNum).split("|")[0]
+                if self.char.state == "cmb" or self.char.state == "wlk":
+                    output = text.get_special(self.char.phaseNum, self.char.phaseNum) + "|"
+                if self.char.state == "itr": # 8^4|E|xx|4|4|4
+                    output = text.get_interact(self.char.phaseNum, self.char.phaseNum).split("^")[0]
+
                 #     output += " The enemy tries a " + phs
                 #     moves = ["slash", "lunge", "push", "pierce", "riposte", "parry", "feint"]
                 #     for x in moves:
@@ -219,7 +240,7 @@ class Main:
                 #             output += "|{" + x + "}"
 
             else:
-                output = text.get_encounters(enc, num).split("|")[0]
+                output = text.get_encounters(self.char.phaseNum, self.char.phaseNum).split("|")[0]
 
         #########################################################
         # If new encounter is made, setup here.
@@ -231,17 +252,28 @@ class Main:
             if enc in "LZ" or "|L|" in self.char.tracker or "|Z|" in self.char.tracker: # Added so the loot and the Basilisk are non-repeatable.
                 enc = "E"
 
-            if self.user.username == "fakeWalker" and self.user.statusID == "000000000000":
+            ######################################################### Testers
+            if self.user.username == "fakeWalker" or self.user.username == "fakeSolve" and self.user.statusID == "000000000000":
                 enc = "E"
-            elif self.user.username == "fakeCombatWin" and self.user.statusID == "000000000000":
+            elif self.user.username == "fakeMelee" and self.user.statusID == "000000000000":
                 enc = "B"
-            output = text.get_encounters(enc, num).split("|")  # All encounters set to max
+            elif self.user.username == "fakeInteract" and self.user.statusID == "000000000000":
+                enc = "L"
+            elif self.user.username == "fakeTalker" and self.user.statusID == "000000000000":
+                enc = "T"
+            elif self.user.username == "fakePuzzle" and self.user.statusID == "000000000000":
+                enc = "P"
+            elif self.user.username == "fakeRats" and self.user.statusID == "000000000000":
+                enc = "R"
+            ######################################################### Testers
+
+            output = text.get_encounters(enc, self.char.phaseNum).split("|")  # All encounters set to max
             self.char.state = output[1]
             output = output[0]
 
             if self.char.state == "cmb": # Go here if state == combat
-                if num != "0":
-                    if num > 1:  # changes pronoun based on number of enemies in encounter.
+                if self.char.phaseNum != "0":
+                    if self.char.phaseNum > 1:  # changes pronoun based on number of enemies in encounter.
                         output += " They"
                     else:
                         output += " It"
@@ -276,16 +308,27 @@ class Main:
                     output += cutter[0]
                     phs = "start"
             elif self.char.state == "PZL":
-                first = "2"
-                second = "000"
-                third = "x"
+                output += text.get_puzzle("x")
+                third = "2"
+                forth = "000"
+                fifth = "x"
                 phs = "fixed" # In the future, this will be used to determine the type of puzzle.
 
 
             #
             # Temp changed to make sure every passage has an encounter & all encounters set to max.
             #
-            self.char.tracker += "," + self.char.POS + "|" + enc + "|" + phs + "|" + first + "|" + second + "|" + third
+            # self.char.tracker += "," + self.char.POS + "|" + self.char.encounter + "|" + phs + "|" + third + "|" + forth + "|" + fifth
+            self.char.tracker += "{}|{}|{}|{}|{}".format(self.char.POS, self.char.encounter, self.char.phase,
+                                                         self.char.phaseNum, self.char.undefined_one,
+                                                         self.char.undefined_two)
+
+            # self.POS_Tracker = i
+            # self.encounter = i.split("|")[1]
+            # self.phase = i.split("|")[2]
+            # self.phaseNum = i.split("|")[3]
+            # self.undefined_one = i.split("|")[4]
+            # self.undefined_two = i.split("|")[5]
 
 
 
