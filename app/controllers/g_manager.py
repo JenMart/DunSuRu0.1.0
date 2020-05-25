@@ -73,7 +73,13 @@ class Main:
                 # elif "summon the basilisk of carrows way." in input:
                 #     converse = talkManager()
                 #     output = converse.converse(input)
-                if self.char.state == "wlk":
+                if "items" in input or "item" in input:
+                    item_manager = itemManager()
+                    output = item_manager.useItem(input, self.char)
+                elif "look" in input:
+                    output = self.lookAround()
+                    output += self.encounter(userName)
+                elif self.char.state == "wlk":
                     output = self.moveto(input)
                     output += self.lookAround()
                     output += self.encounter(userName)
@@ -101,12 +107,6 @@ class Main:
 
                     # output += self.lookAround()
                     # output += self.encounter()
-                elif "items" in input or "item" in input and self.char.state != "cmb":
-                    item_manager = itemManager()
-                    output = item_manager.useItem(input, self.char)
-                elif "look" in input:
-                    output = self.lookAround()
-                    output += self.encounter(userName)
                 else:
                     output = "This is not a valid option."
 
@@ -210,8 +210,8 @@ class Main:
         #########################################################
         # If encounter exists.
         #########################################################
-        print("Position is...")
-        print(self.char.POS)
+        # print("Position is...")
+        # print(self.char.POS)
         if self.char.POS in self.char.tracker: #If encounter exists in this square
             x = self.char.tracker.split(",")
             for i in x: # Looks for space

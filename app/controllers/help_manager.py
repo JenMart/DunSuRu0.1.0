@@ -30,7 +30,20 @@ class helpManager:
         forth = counter.split("|")[4]
         fifth = counter.split("|")[5]
 
-        if "combat" in input:
+        if "where" in input:
+            if char.state == "cmb":
+                output = "you "
+            elif char.state == "wlk":
+                None
+            elif char.state == "mel":
+                None
+            elif char.state == "itr":
+                None
+            elif char.state == "pzl":
+                None
+            elif char.state == "tlk":
+                None
+        elif "combat" in input:
             None
         elif "talk" in input:
             None
@@ -44,4 +57,4 @@ class helpManager:
             None
 
 
-        return message
+        return output
