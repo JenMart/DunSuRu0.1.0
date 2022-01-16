@@ -32,7 +32,7 @@ class helpManager:
 
         if "where" in input:
             if char.state == "cmb":
-                output = "you "
+                output = "you are in group combat."
             elif char.state == "wlk":
                 None
             elif char.state == "mel":

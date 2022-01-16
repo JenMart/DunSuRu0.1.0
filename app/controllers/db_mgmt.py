@@ -1,5 +1,8 @@
 import sqlite3
 import os
+import threading
+import time
+from asyncio import run
 
 from sqlite3worker import Sqlite3Worker
 
@@ -101,7 +104,7 @@ class DatabaseManager:
 
     def addChar(self, userName, charName):
         charJob = "bandit"
-        health = "10"
+        health = "5"
         gold = "1"
         curSec = "dun"
         region = "tester"
@@ -110,8 +113,10 @@ class DatabaseManager:
         tracker = "1^1|E|NP|0|0|0"
         items = "holy water|1,alch fire|3,egg|5,lit candle|1"
         wincon = "false"
+
         CHARACTER = (
-            """INSERT INTO CHARACTERS(USER, NAME, JOB, HEALTH, GOLD, ITEMS, STATE, REGIONTYPE, REGION, WINCON) VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')"""
+            """INSERT INTO CHARACTERS(USER, NAME, JOB, HEALTH, GOLD, ITEMS, STATE, REGIONTYPE, REGION, WINCON) 
+            VALUES((SELECT ID FROM USERS WHERE USERNAME = '{}'), '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')"""
                 .format(userName, charName, charJob, health, gold, items, state, curSec, region, wincon))
         PLAYERTRACKER = (
             """INSERT INTO PLAYERTRACKER(CHAR, REGION, TYPE, POS, TRACKER) VALUES((SELECT ID FROM CHARACTERS WHERE NAME ='{}'), '{}', '{}', '{}', '{}')""".format(
@@ -186,10 +191,9 @@ class DatabaseManager:
             item_list += "{}|{},".format(i, char.items[i])
         item_list = item_list[:-1]
 
-
-
         # print(item_list)
-        CHARACT = ("""UPDATE CHARACTERS SET STATE = '{}', ITEMS = '{}', WINCON = '{}' WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(char.state, item_list, char.WINCON, name))
+        CHARACT = ("""UPDATE CHARACTERS SET STATE = '{}', ITEMS = '{}', WINCON = '{}', HEALTH = '{}' 
+        WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(char.state, item_list, char.WINCON, char.health, name))
         USER = ("""UPDATE USERS SET TWEETID = '{}', DATESTAMP = '{}', LASTMESSAGE = '{}' WHERE USERNAME = '{}'""".format(tweetID, str(date), "null", name))
         PLAYERTRACKER = ("""UPDATE PLAYERTRACKER SET POS = '{}', TRACKER = '{}' WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME ='{}')""".format(char.POS, char.tracker, name))
 
@@ -212,10 +216,25 @@ class DatabaseManager:
 
         return
 
+
+    def time_out(self, name, tweetID, date):
+        USER = (
+            """UPDATE USERS SET TWEETID = '{}', DATESTAMP = '{}', LASTMESSAGE = '{}' WHERE USERNAME = '{}'""".format(
+                tweetID, str(date), "null", name))
+
+        sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
+        sql_worker.execute(USER)
+        sql_worker.close()
+
+        return
+
     def for_this_moment_all_is_well(self, the_honored):
 
         yes_please = "true"
         CHARACT = ("""UPDATE CHARACTERS SET WINCON = {} WHERE USER = (SELECT ID FROM USERS WHERE USERNAME = '{}')""".format(yes_please, the_honored))
+        PLAYERTRACKER = (
+            """UPDATE PLAYERTRACKER SET POS = '{}', TRACKER = '{}' WHERE CHAR = (SELECT ID FROM CHARACTERS WHERE NAME ='{}')""".format(
+                the_honored.POS, the_honored.tracker, the_honored))
         sql_worker = Sqlite3Worker("SkyTweetRun.sqlite")
         sql_worker.execute(CHARACT)
         sql_worker.close()
@@ -230,9 +249,9 @@ class DatabaseManager:
         cursor.commit()
         cursor.close()
         if len(tweets) == 0:
-            return True
+            return True, time.time()
         else:
-            return False
+            return False, time.time()
 
     def checkCharacter(self, name):
         cursor = sqlite3.connect('SkyTweetRun.sqlite')

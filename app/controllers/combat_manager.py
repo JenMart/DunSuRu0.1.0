@@ -18,6 +18,7 @@ class combatManager:
     def meleeCombat(self, input, char):
         text = textDAO("lkjge9423r")
         tracker = char.tracker.split(",")
+        counter = ""
         for i in tracker:
             if char.POS in i:
                 counter = i
@@ -59,7 +60,7 @@ class combatManager:
                     break
                 elif "last ditch" in input: # Gives a tiny chance of turning a lose into a win.
                     if (secTracker % 4) == 0:  # gives players 1/4 chance of success
-                        output = "Your attack surprises the enemy."
+                        output = "Your attack surprises the enemy and you slay them where they stand."
                         enemyHealth = 0
                     else:
                         output = "Your last ditch effort failed."
@@ -68,7 +69,7 @@ class combatManager:
                 else:
                     output = "The world inverses but soon returns to normal."
             else: # If the phase is normal.
-                if i not in moveCounter and i in moves or i in moveTracker or i == "fail":
+                if i not in moveCounter and i in moves or i in moveTracker or i == "fail": # If user fails
                     if secTracker < len(moves) and phase != moves[secTracker]:
                         phase = moves[secTracker]
                     else:
@@ -80,7 +81,6 @@ class combatManager:
                     playerHealth -= 1
                     output = "You failed to counter. P: " + str(playerHealth) + " E: " + str(enemyHealth)
                     break
-                # If correct
                 elif i in moveCounter and i != "|":
                     if (secTracker % 3) == 0:
                         phase = text.get_melee(i).split("|")[0]
@@ -126,7 +126,7 @@ class combatManager:
             char.tracker = char.tracker.replace(counter, updateCell)
             updateEncounter = text.get_encounters(enc, "x").split("|")
             char.state = updateEncounter[1]
-            output += " Your failure goes unrecorded." + " The passage is now empty."
+            output += " Your failure goes unrecorded. The passage is now empty."
             char.health -= 1
         # print(updateCell)
         return output
@@ -144,6 +144,8 @@ class combatManager:
         enc = counter.split("|")[1]  # encounter
         phase = counter.split("|")[2]  # Encounter phase
         num = int(counter.split("|")[3])  # number of things in encounter
+        playerHealth = int(counter.split("|")[4])
+        secTracker = int(strftime("%S", gmtime()))
 
         #
         # Keeping this around for now in case the new setup breaks.
@@ -175,19 +177,33 @@ class combatManager:
         if textCheck:
             if textCheck == "attack":
                 damage = text.get_damage(textCheck, "bandit").split("|")
-                num -= int(damage[1])
+                if (secTracker % 12) == 0:
+                    num -= int(damage[2])
+                else:
+                    num -= int(damage[1])
+                    playerHealth -= 1
+                if "fall to the swarm" in input:
+                    playerHealth = 0
             else:
                 damage = ["that is not a valid option you do $$ damage.", 0]
 
         #####################
-        if num > 0:
-            updateCell = char.POS + "|" + enc + "|" + "BP" + "|" + str(num )
-            char.tracker = char.tracker.replace(counter, updateCell)
-            updateEncount = text.get_encounters(enc, num).split("|")
-            output = damage[0].replace("$$",str(damage[1])) +  updateEncount[0] + text.get_special(enc, phase)
-            char.state = updateEncount[1]
-        else:
-            updateCell = char.POS + "|" + enc + "|" + "EP" + "|" + str(0)
+        if num > 0: # If enemy is still alive
+            if playerHealth > 0:
+                updateCell = char.POS + "|" + enc + "|" + "BP" + "|" + str(num) + "|" + str(playerHealth) + "|5"
+                char.tracker = char.tracker.replace(counter, updateCell)
+                updateEncount = text.get_encounters(enc, num).split("|")
+                output = damage[0].replace("$$",str(damage[1])) +  updateEncount[0] + text.get_special(enc, phase)
+                char.state = updateEncount[1]
+            else:
+                updateCell = char.POS + "|" + enc + "|" + "EP" + "|" + str(0) + "|" + str(playerHealth) + "|" + "5"
+                char.tracker = char.tracker.replace(counter, updateCell)
+                updateEncounter = text.get_encounters(enc, "x").split("|")
+                char.state = updateEncounter[1]
+                output = " You are mobbed by rats. The passage is now empty."
+                char.health -= 1
+        else: # If enemy is defeated.
+            updateCell = char.POS + "|" + enc + "|" + "EP" + "|" + str(0) + "|" + str(playerHealth) + "|5"
             char.tracker = char.tracker.replace(counter, updateCell)
             updateEncount = text.get_encounters(enc, "x").split("|")
             output = updateEncount[0] + " The passage is now empty."

@@ -48,22 +48,29 @@ class interactManager:
                     char.tracker = char.tracker.replace(enc + str(num), enc + str(0))
                     char.state = "wlk"
             else:
-                output = "This is not a valid choice."
+                output = "This is not a valid choice. "
 
         elif enc == "L" or enc == "0": # Loot (i.e. treasure)
             path = text.get_interact(enc, phs)
             choice = parse.parser(path, input)
             if choice != False:
                 out = text.get_interact(enc, choice)
-                output = out.split("^")[0]
+                output = out.split("|")[0]
                 updateCell = char.POS + "|" + enc + "|" + choice + "|" + "5" + "|" + "5" + "|" + "5"
                 char.tracker = char.tracker.replace(counter, updateCell)
-                char.state = out.split("^")[1]
-                if enc == "0" and choice == "inside":
-                    char.WINCON = "Permitted."
-                    print("All is well.")
-                    # self.db_mgmt.for_this_moment_all_is_well(char.name)
+                char.state = out.split("|")[1]
+                if choice == "inside":
+                    if enc == "0":
+                        char.WINCON = "Permitted."
+                        print("All is well.")
+                        if "parchment piece" not in char.items:
+                            char.items.update({"parchment piece": '1'})
+                        else:
+                            char.items.update({"parchment piece": str(int(char.items["parchment piece"]) + 1)})
+                    elif enc == "L":
+                        coin = random.randint(5,10)
+                        char.gold = coin
             else:
-                output = "This is not a valid choice."
+                output = "This is not a valid choice. "
 
         return output

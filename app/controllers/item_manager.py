@@ -16,16 +16,16 @@ class itemManager:
         # itemsCut = char.items.lower().split(",")
         output = ""
         if "show" in input:
-            output = "You hold in your possession: "
+            output = "You hold in your possession:"
             for i in char.items:
                 output += " {} {},".format(char.items[i], i.capitalize())
-            output = output[:-1]
+            output += " {} gold.".format(str(char.gold))
         elif "use" in input:
             for i in char.items:
                 i = i.split("|")[0]
                 # print(i)
                 if i in input:
-                    if char.state == "cmb": # This is terrible but temporary. Probably.
+                    if char.state == "cmb": # This is all terribly written but temporary. Probably.
                         text = textDAO("ntergo;ybw")
                         tracker = char.tracker.split(",")
                         counter = ""
@@ -36,7 +36,16 @@ class itemManager:
                         enc = counter.split("|")[1]  # encounter
                         phase = counter.split("|")[2]  # Encounter phase
                         num = int(counter.split("|")[3])  # number of things in encounter
-                        if enc == "R":
+                        if "lit candle" in input:
+                            output = "You do not blow out the candle. Not yet."
+                            break
+                        elif "parchment piece" in input:
+                            output = "You are unable to make out the words in this light."
+                            break
+                        elif "candle stub" in input:
+                            output = "You do not risk the candle stub. Even though it is spent it is not without worth."
+                            break
+                        elif enc == "R":
                             if "alch fire" in i:
                                 damage = random.randint(2, 4)
                                 num -= damage
@@ -78,19 +87,22 @@ class itemManager:
                                 output += updateEncount[0] + text.get_special(
                                     enc, phase)
                                 break
-
                     else:
-                        if "candle" in input:   # Secrets.
+                        if "lit candle" in input:   # Secrets.
                             if char.POS == "8^4":
                                 char.state = "itr"
                                 char.tracker = char.tracker.replace("8^4|E|xx|4|4|4","8^4|0|start|5|5|5")
                                 output = " You blow out the candle. In the shining darkness, you see a chest." \
                                          "| {Open} the lid.| Examine the {sides}.| Example the {lock}."
                                 char.items.update({i: int(char.items[i]) - 1})
+                                char.items.update({"candle stub" : 1})
                                 break
                             else:
                                 output = "You do not blow out the candle. Not yet."
                                 break
+                        elif "parchment piece" in input:
+                            output = " You are unable to make out the words in this light."
+                            break
                         else:
                             output = "You use {}. Nothing happens.".format(i)
                             char.items.update({i: int(char.items[i]) - 1})
@@ -99,4 +111,9 @@ class itemManager:
                     output = "You do not possess this item."
         else:
             output = "You have selected an invalid option."
+
+        for i in char.items: # If item is at zero, system removes it.
+            if int(char.items[i]) <= 0:
+                char.items.pop(i)
+                break
         return output

@@ -16,8 +16,14 @@ Upcoming features:
     - Make it not crash or at least crash properly. Not picky.
     - Add encounters
     - Improve combat system *DONE-SH*
-    - Proper implement conversations.
-    - Add in Interprocess Communication (IPC) for database.
+    - Proper implement conversations. *DONE*
+    - Add in Interprocess Communication (IPC) for database. *DONE- I THINK*
+    - Re-do parse structure- Standardize it and remove commas
+        > *update 06-23-20* OMG there is so much of it. I'll do it later.
+    - Allow for users to reenter dungeon *DONE*
+    - Add classes
+    - Names
+    - GET MORE API KEYS.
 
 Sections:
     - Overworld:
@@ -361,3 +367,14 @@ Interact (9/21/19)
         > I'll figure it out later.
     - Items
         > Items are found while in wlk.
+
+Reenter the dungeon (6/20/20)
+    - User "wins" dungeon by finding piece of parchment and exits dungeon
+        > User CANNOT leave dungeon until they possess parchment.
+    - When user exits dungeon they are given an option to reenter dungeon
+    - If declines, they find a small hut where they can translate parchment text
+    - If decides to go back, everything remains the same but the candle is relit.
+        > Candle name maybe should change to melted/stub?
+    - Dungeon can only be reentered three times.
+        > at last time, not enough candle left to be relit, preventing player from reentering dungeon.
+            > Or maybe allow players to reenter? Thoughts for later.
