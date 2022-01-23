@@ -5,9 +5,9 @@ from tweepy.streaming import StreamListener, json
 from tweepy import OAuthHandler
 from tweepy import Stream
 from datetime import datetime
-from app.controllers.db_mgmt import DatabaseManager
-from app.controllers.g_manager import Main
-from  app.models.userData import userData
+from app.controllers.database_manager import DatabaseManager
+from app.controllers.game_manager import GameManager
+from  app.models.UserData import UserData
 import time
 
 
@@ -36,8 +36,8 @@ class twtrManager(StreamListener):
     def __init__(self, api=None):
         super().__init__(api=None)
         self.db_mgmt = DatabaseManager()
-        self.g_manager = Main()
-        self.userData = userData
+        self.g_manager = GameManager()
+        self.userData = UserData
 
 
     def on_status(self, status):
@@ -56,7 +56,7 @@ class twtrManager(StreamListener):
         print("Time Stamp: "+DT)
         ##########################################
         try:
-            ex = self.g_manager.handleChoice(txt, screenName, time, statID)
+            ex = self.g_manager.handle_choice(txt, screenName, time, statID)
             self.printTweet(screenName, ex, statID)
         except Exception as e:
             print("Error")

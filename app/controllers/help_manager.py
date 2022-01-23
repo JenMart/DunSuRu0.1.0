@@ -1,4 +1,4 @@
-from app.controllers.db_mgmt import DatabaseManager
+from app.controllers.database_manager import DatabaseManager
 from app.controllers.twt_print import printTwt
 from app.models.charDAO import CharDAO
 import random
@@ -7,7 +7,8 @@ from time import gmtime, strftime
 from app.models.textGetter import textDAO
 from app.models.parsers import parsers
 
-class helpManager:
+
+class HelpManager:
 
     def __init__(self):
         charDAO = CharDAO
@@ -55,6 +56,5 @@ class helpManager:
             None
         elif "interact" in input:
             None
-
 
         return output

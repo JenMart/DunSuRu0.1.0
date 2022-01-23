@@ -1,193 +1,197 @@
-from app.controllers.db_mgmt import DatabaseManager
+from app.controllers.database_manager import DatabaseManager
 from app.controllers.twt_print import printTwt
+from app.controllers.choice_manager import ChoiceManager, username_checker
+
 from app.models.charDAO import CharDAO
 from app.models.textGetter import textDAO
-from app.models.userData import userData
+from app.models.UserData import UserData
+
 from app.controllers.combat_manager import combatManager
 from app.controllers.new_character import newCharacter
 from app.controllers.interact_manager import interactManager
-from app.controllers.talk_manager import talkManager
+from app.controllers.talk_manager import TalkManager
 from app.controllers.item_manager import itemManager
 from app.controllers.puzzle_manager import puzzleManager
 from app.controllers.whisper import Whispers
+
 from app.models.parsers import parsers
+
 import random
 import time
-import re
-from time import gmtime, strftime
 
 
 
 
-class Main:
+class GameManager:
     def __init__(self):
         self.db_mgmt = DatabaseManager()
         self.twt_print = printTwt()
+        self.choice = ChoiceManager()
         self.CharDAO = CharDAO
         self.textDAO = textDAO
-        self.userData = userData
+        self.userData = UserData
         self.combatManager = combatManager
         self.newCharacter = newCharacter
         self.interact = interactManager
-        self.talk = talkManager
+        self.talk = TalkManager
         self.items = itemManager
         self.puzzles = puzzleManager
         self.parser = parsers
         self.whisper = Whispers
 
-
-    def handleChoice(self, input, userName, created_time, tweetID):
-
+    def handle_choice(self, input, userName, created_time, tweetID):
+        xx = self.db_mgmt.setup()
         #
         # checks to see if user info already exists. If it does not, adds to DB.
         #
-        self.user = userData(userName, created_time, input, tweetID)
-        checkUser, user_time = self.db_mgmt.checkUser(userName)
+        self.user = UserData(userName, created_time, input, tweetID)
         current_time = time.time()
         output = "This is not a valid option"
-        if (checkUser):  # If not, add to DB
-            self.db_mgmt.addUser(userName, created_time, tweetID)
         input = input.lower()
+
+        username_checker(userName, created_time, tweetID)
+
+        ###############################################################################################################
         #
         # Figure out how to store function calls in a dict without it calling them all!
         #
-        checkChar = self.db_mgmt.checkCharacter(userName)
-        if (checkChar):
+        ###############################################################################################################
+        character_exists = self.db_mgmt.check_character(userName)
+        if not character_exists:
             if "new" in input or "start" in input:
                 new_char = newCharacter()
-                self.db_mgmt.addChar(userName, userName)
-                charTuple = self.db_mgmt.pullCharacter(userName)
-                self.char = CharDAO(charTuple[0], charTuple[1], int(charTuple[2]), charTuple[3], charTuple[4], charTuple[5],
-                                    charTuple[6],
-                                    charTuple[7], charTuple[8], charTuple[9], charTuple[10])
+                add_character(userName, userName)
+                character_info = self.db_mgmt.pull_character(userName)
+                self.character = CharDAO(character_info[0], character_info[1], int(character_info[2]), character_info[3], character_info[4],
+                                         character_info[5],
+                                         character_info[6],
+                                         character_info[7], character_info[8], character_info[9], character_info[10])
                 output = new_char.newCharacter(userName)
-                output += self.lookAround()
+                output += self.look_around()
                 return output
             else:
                 output = "You do not possess a character. Type {Start} or {New} to begin playing."
         elif current_time <= int(self.user.created_time) + 60:
             # try:
-            charTuple = self.db_mgmt.pullCharacter(userName)
-            self.char = CharDAO(charTuple[0], charTuple[1], charTuple[2], charTuple[3], charTuple[4], charTuple[5],
-                                charTuple[6],
-                                charTuple[7], charTuple[8], charTuple[9], charTuple[10])
+            character_info = self.db_mgmt.pull_character(userName)
+            self.character = CharDAO(character_info[0], character_info[1], character_info[2], character_info[3], character_info[4], character_info[5],
+                                     character_info[6],
+                                     character_info[7], character_info[8], character_info[9], character_info[10])
 
+        ###############################################################################################################
 
-            output =  "This is not a valid option."
+            output = "This is not a valid option."
             # elif "summon the basilisk of carrows way." in input:
             #     converse = talkManager()
             #     output = converse.converse(input)
-            if self.char.health < 0:
+            if self.character.health < 0:
                 output = self.get_up(input)
             elif "items" in input or "item" in input:
                 item_manager = itemManager()
-                output = item_manager.useItem(input, self.char)
+                output = item_manager.useItem(input, self.character)
             elif "look" in input:
-                output = self.lookAround()
+                output = self.look_around()
                 output += self.encounter(userName)
-            elif self.char.state == "wlk":
-                output = self.moveto(input)
-                if self.char.POS != "p":
-                    output += self.lookAround()
+            elif self.character.state == "wlk":
+                output = self.move_character(input)
+                if self.character.POS != "p":
+                    output += self.look_around()
                     output += self.encounter(userName)
-            elif self.char.state == "cmb":
+            elif self.character.state == "cmb":
                 combat_manager = combatManager()
-                output = combat_manager.groupCombat(input, self.char)
+                output = combat_manager.groupCombat(input, self.character)
                 # output += self.lookAround()
                 # output += self.encounter()
-            elif self.char.state == "mel": #Two sep combat types. May combine later.
+            elif self.character.state == "mel":  # Two sep combat types. May combine later.
                 combat_manager = combatManager()
-                output = combat_manager.meleeCombat(input, self.char)
+                output = combat_manager.meleeCombat(input, self.character)
                 # output += self.lookAround()
                 # output += self.encounter()
-            elif self.char.state == "itr":
+            elif self.character.state == "itr":
                 interact = interactManager()
-                output = interact.interact(input, self.char)
+                output = interact.interact(input, self.character)
                 # output += self.lookAround()
                 # output += self.encounter()
-            elif self.char.state == "tlk":
-                talk_manager = talkManager()
-                output = talk_manager.converse(input, self.char)
-            elif self.char.state == "PZL":
+            elif self.character.state == "tlk":
+                talk_manager = TalkManager()
+                output = talk_manager.converse(input, self.character)
+            elif self.character.state == "PZL":
                 puz = puzzleManager()
-                output = puz.puzzles(input, self.char)
+                output = puz.puzzles(input, self.character)
                 # output += self.lookAround()
                 # output += self.encounter()
-            elif self.char.state == "out":
+            elif self.character.state == "out":
                 output = self.the_outside(input)
-            elif self.char.state == "end":
-                self.char.state = "stop"
-                self.db_mgmt.updateUser(userName, tweetID, created_time, self.char)
+            elif self.character.state == "end":
+                self.character.state = "stop"
+                update_user(userName, tweetID, created_time, self.character)
                 # self.the_end(input)
                 text = textDAO("pojihudew")
-                output = text.parchment_pieces(int(self.char.items["parchment piece"]))
+                output = text.parchment_pieces(int(self.character.items["parchment piece"]))
                 whisper = Whispers()
                 whisper.the_note(userName, output, tweetID)
-            elif self.char.state == "stop":
+            elif self.character.state == "stop":
                 output = "Your journey has faced The End."
 
-
-
-            if self.char.health < 0: # This is intentional.
-                output = self.char.name + " has fallen. Their legacy will be remembered as people remember the clouds that bring rain. Do you wish to try again? {Yes} {No}."
+            if self.character.health < 0:  # This is intentional.
+                output = self.character.name + " has fallen. Their legacy will be remembered as people remember the clouds that bring rain. Do you wish to try again? {Yes} {No}."
 
         time.sleep(60)
         # current_time = time.time()
-
+        ###############################################################################################################
         if int(self.user.created_time) + 60 < current_time:
             print("user time")
             print(self.user.created_time)
             print("current time")
             print(current_time)
-            self.db_mgmt.updateUser(userName, tweetID, created_time, self.char)
+            update_user(userName, tweetID, created_time, self.character)
             return output
         else:
             print("over time")
-            self.db_mgmt.time_out(userName, tweetID, created_time)
+            time_out(userName, tweetID, created_time)
             return "OVER_TIME_ERROR"
 
-
-    def moveto(self, input):
+    def move_character(self, input):
         imp = input
         #
         # For sake of sanity, all dungeons start at 1:1 until stated otherwise.
         #
         dungeon = textDAO("pojihudew")
-        dun = dungeon.get_Dungeon(self.char.POS).split("|")[0]
+        dun = dungeon.get_Dungeon(self.character.POS).split("|")[0]
         nor = dun.split("/")[0]
         sou = dun.split("/")[1]
         eas = dun.split("/")[2]
         wes = dun.split("/")[3]
         if "north" in imp and nor != "x":
             output = "You go north. "
-            self.char.POS = nor
+            self.character.POS = nor
         elif "south" in imp and sou != "x":
             output = "You go south. "
-            self.char.POS = sou
+            self.character.POS = sou
         elif "east" in imp and eas != "x":
             output = "You go east. "
-            self.char.POS = eas
+            self.character.POS = eas
         elif "west" in imp and wes != "x":
             output = "You go west. "
-            self.char.POS = wes
+            self.character.POS = wes
         else:
             output = "This is not a valid choice. "
         #
         # If player attempts to leave, system currently places them back at starting square.
         #
-        if self.char.POS == "p":
-            if self.char.WINCON == "Permitted.":
+        if self.character.POS == "p":
+            if self.character.WINCON == "Permitted.":
                 output = "You step in the sun. For the moment there is respite. Do you brave the depths of Carrows Way again?| {Yes} {No}."
-                self.char.state = "out"
+                self.character.state = "out"
             else:
-                self.char.POS = "1^1"
+                self.character.POS = "1^1"
                 output = "You cannot leave. Not until you've found what you are looking for."
         return output
 
-    def lookAround(self):
+    def look_around(self):
         output = " You see"
         text = textDAO("pojihudew")
-        dungeon = text.get_Dungeon(self.char.POS)
+        dungeon = text.get_Dungeon(self.character.POS)
         nor = dungeon.split("/")[0]
         sou = dungeon.split("/")[1]
         eas = dungeon.split("/")[2]
@@ -239,21 +243,21 @@ class Main:
         #########################################################
         # print("Position is...")
         # print(self.char.POS)
-        if self.char.POS in self.char.tracker: #If encounter exists in this square
-            x = self.char.tracker.split(",")
-            for i in x: # Looks for space
-                if self.char.POS in i: # If finds space, slices into chunks.
-                    enc = i.split("|")[1] # encounter
-                    phs = i.split("|")[2] # Encounter phase
-                    num = int(i.split("|")[3]) # number of things in encounter
+        if self.character.POS in self.character.tracker:  # If encounter exists in this square
+            x = self.character.tracker.split(",")
+            for i in x:  # Looks for space
+                if self.character.POS in i:  # If finds space, slices into chunks.
+                    enc = i.split("|")[1]  # encounter
+                    phs = i.split("|")[2]  # Encounter phase
+                    num = int(i.split("|")[3])  # number of things in encounter
                     moveTracker = i.split("|")[3]
                     # print(num)
                     break
             if num > 0:
                 output = text.get_encounters(enc, num).split("/\\")[0]
-                if self.char.state == "cmb" or self.char.state == "wlk":
+                if self.character.state == "cmb" or self.character.state == "wlk":
                     output = text.get_special(enc, phs) + "|"
-                if self.char.state == "itr": # 8^4|E|xx|4|4|4
+                if self.character.state == "itr":  # 8^4|E|xx|4|4|4
                     output = text.get_interact(enc, phs).split("|")[0]
 
                 #     output += " The enemy tries a " + phs
@@ -269,10 +273,10 @@ class Main:
         # If new encounter is made, setup here.
         #########################################################
         else:
-            encSquare = text.get_Dungeon(self.char.POS).split("|")[1]
+            encSquare = text.get_Dungeon(self.character.POS).split("|")[1]
             randy = random.randint(0, len(encSquare) - 1)
             enc = encSquare[randy]
-            if enc in "LZ" or "|L|" in self.char.tracker or "|Z|" in self.char.tracker: # Added so the loot and the Basilisk are non-repeatable.
+            if enc in "LZ" or "|L|" in self.character.tracker or "|Z|" in self.character.tracker:  # Added so the loot and the Basilisk are non-repeatable.
                 enc = "E"
 
             ######################################################### Testers
@@ -291,10 +295,10 @@ class Main:
             ######################################################### Testers
 
             output = text.get_encounters(enc, num).split("|")  # All encounters set to max
-            self.char.state = output[1]
+            self.character.state = output[1]
             output = output[0]
 
-            if self.char.state == "cmb": # Go here if state == combat
+            if self.character.state == "cmb":  # Go here if state == combat
                 if num != "0":
                     if num > 1:  # changes pronoun based on number of enemies in encounter.
                         output += " They"
@@ -310,18 +314,18 @@ class Main:
                         output += " spots the player." + text.get_special(enc, phs) + " |"
                 else:
                     output = " The passage is empty."
-                    self.char.state = "wlk"
-            elif self.char.state == "mel":
+                    self.character.state = "wlk"
+            elif self.character.state == "mel":
                 moves = ["slash", "lunge", "push", "pierce", "riposte", "parry", "feint"]
                 phs = moves[0]  # slash by default until further notice.
                 output += " They come at you with a " + phs  # Using phase to track what move enemy used.
                 for i in moves:
                     output += "|{" + i + "}"
-            elif self.char.state == "tlk":
+            elif self.character.state == "tlk":
                 cutter = text.get_talk(enc, "start").split("|")
                 output += cutter[0]
                 phs = "start"
-            elif self.char.state == "itr":
+            elif self.character.state == "itr":
                 if enc == "T":
                     cutter = text.get_traps(enc, 1).split("|")
                     output += cutter[0]
@@ -330,20 +334,17 @@ class Main:
                     cutter = text.get_interact(enc, "start").split("|")
                     output += cutter[0]
                     phs = "start"
-            elif self.char.state == "PZL":
+            elif self.character.state == "PZL":
                 output += text.get_puzzle("x")
                 third = "2"
                 forth = "000"
                 fifth = "x"
-                phs = "fixed" # In the future, this will be used to determine the type of puzzle.
-
+                phs = "fixed"  # In the future, this will be used to determine the type of puzzle.
 
             #
             # Temp changed to make sure every passage has an encounter & all encounters set to max.
             #
-            self.char.tracker += "," + self.char.POS + "|" + enc + "|" + phs + "|" + third + "|" + forth + "|" + fifth
-
-
+            self.character.tracker += "," + self.character.POS + "|" + enc + "|" + phs + "|" + third + "|" + forth + "|" + fifth
 
         #
         # If 0 encounters in square, system acts like it's empty.
@@ -353,11 +354,11 @@ class Main:
     def get_up(self, input):
         if " yes " in input:
             output = "That is the right answer."
-            self.char.WINCON = "false"
-            self.char.state = "wlk"
-            self.char.POS = "1^1"
-            self.char.tracker = "1^1|E|NP|0|0|0"
-            self.char.items.update({"lit candle" : "1"})
+            self.character.WINCON = "false"
+            self.character.state = "wlk"
+            self.character.POS = "1^1"
+            self.character.tracker = "1^1|E|NP|0|0|0"
+            self.character.items.update({"lit candle": "1"})
         elif " no " in input:
             output = "Until you are ready."
         else:
@@ -368,24 +369,24 @@ class Main:
     def the_outside(self, input):
 
         if "yes" in input.split(" "):
-            if int(self.char.items["parchment piece"]) < 3:
+            if int(self.character.items["parchment piece"]) < 3:
                 output = "Your candle is lit once more. Go forth."
-                self.char.WINCON = "false"
-                self.char.state = "wlk"
-                self.char.POS = "1^1"
-                self.char.items.update({"lit candle" : "1"})
-                self.char.tracker = "1^1|E|NP|0|0|0"
+                self.character.WINCON = "false"
+                self.character.state = "wlk"
+                self.character.POS = "1^1"
+                self.character.items.update({"lit candle": "1"})
+                self.character.tracker = "1^1|E|NP|0|0|0"
             else:
                 output = "Your candle has fought hard. Now it is time to step {forward}."
         elif "no" in input.split(" "):
             # output = "Until you are ready."
-            self.char.state = "tlk"
+            self.character.state = "tlk"
             text = textDAO("456ghy54yglllf")
             enc = "S"
             cutter = text.get_talk(enc, "start").split("|")
             output = cutter[0]
             phs = "start"
-            self.char.tracker += "," + self.char.POS + "|" + enc + "|" + phs + "|4|4|4"
+            self.character.tracker += "," + self.character.POS + "|" + enc + "|" + phs + "|4|4|4"
         else:
             output = "Do you brave the depths of Carrows Way again?| {Yes} {No}"
 
@@ -394,9 +395,8 @@ class Main:
     def the_end(self, input):
 
         text = textDAO("pojihudew")
-        output = text.parchment_pieces(int(self.char.items["parchment piece"]))
+        output = text.parchment_pieces(int(self.character.items["parchment piece"]))
         whisper = Whispers
         whisper.the_note()
-
 
 ############################### No Mans Land **********************************************
